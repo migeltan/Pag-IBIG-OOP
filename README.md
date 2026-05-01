@@ -5,10 +5,12 @@ This repository contains the Pag-IBIG Membership Database based on a normalized 
 The database was designed using a normalized structure derived from the original Pag-IBIG Membership Form. It separates data into multiple related tables to:
 
     a. Reduce redundancy
+
     b. Maintain data integrity
+   
     c. Support scalable application development
 
-All tables are connected using primary keys and foreign keys, with relationships enforced through constraints.
+    All tables are connected using primary keys and foreign keys, with relationships enforced through constraints.
 
 3. Requirements
 Before proceeding, make sure you have the following installed:
