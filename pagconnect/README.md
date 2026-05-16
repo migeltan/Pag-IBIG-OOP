@@ -1,59 +1,316 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Pag-CONNECT
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Pag-CONNECT is a web-based Pag-IBIG membership management system built using Laravel and MySQL. The project is designed to manage member records, contributions, membership information, and related services through a centralized web application.
 
-## About Laravel
+## Tech Stack
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+* Backend: PHP / Laravel
+* Database: MySQL
+* Frontend: Blade Templates / HTML / CSS / JavaScript
+* Version Control: Git + GitHub
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# Project Setup Guide
 
-## Learning Laravel
+## 1. Clone the Repository
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```bash
+git clone <your-repository-url>
+cd pagconnect
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Install PHP Dependencies
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+Make sure Composer is installed.
 
-### Premium Partners
+```bash
+composer install
+```
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+This will generate the `vendor/` folder required by Laravel.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 3. Create the Environment File
 
-## Code of Conduct
+Copy the example environment file:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Windows PowerShell
 
-## Security Vulnerabilities
+```powershell
+copy .env.example .env
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### macOS / Linux
 
-## License
+```bash
+cp .env.example .env
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## 4. Configure Database Connection
+
+Open the `.env` file and edit the database section:
+
+```env
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=pagibig
+DB_USERNAME=root
+DB_PASSWORD=
+```
+
+Make sure the database already exists in MySQL.
+
+---
+
+## 5. Import the Database
+
+The SQL dump is located at:
+
+```txt
+database/sql/pagibig.sql
+```
+
+### Using MySQL Workbench
+
+1. Open MySQL Workbench
+2. Create a schema named:
+
+```txt
+pagibig
+```
+
+3. Go to:
+
+```txt
+Server → Data Import
+```
+
+4. Choose:
+
+```txt
+Import from Self-Contained File
+```
+
+5. Select:
+
+```txt
+database/sql/pagibig.sql
+```
+
+6. Select target schema:
+
+```txt
+pagibig
+```
+
+7. Click:
+
+```txt
+Start Import
+```
+
+---
+
+## 6. Generate Laravel Application Key
+
+```bash
+php artisan key:generate
+```
+
+---
+
+## 7. Run the Application
+
+```bash
+php artisan serve
+```
+
+Open the generated local URL in your browser.
+
+Example:
+
+```txt
+http://127.0.0.1:8000
+```
+
+---
+
+# Repository Setup Using Forking
+
+## 1. Fork the Repository
+
+Each team member should first fork the repository on GitHub.
+
+1. Open the main repository on GitHub.
+2. Click the `Fork` button on the top-right corner.
+3. This creates your own copy of the repository under your GitHub account.
+
+---
+
+## 2. Clone Your Fork Using VS Code
+
+### Option A — Using VS Code GUI
+
+1. Open Visual Studio Code
+2. Press:
+
+```txt
+Ctrl + Shift + P
+```
+
+3. Search:
+
+```txt
+Git: Clone
+```
+
+4. Paste your forked repository URL.
+5. Choose a local folder.
+6. Open the project after cloning.
+
+---
+
+### Option B — Using VS Code Terminal
+
+Open a terminal inside VS Code and run:
+
+```bash
+git clone <your-fork-url>
+cd pagconnect
+```
+
+---
+
+## 3. Create Your Own Development Branch
+
+After cloning, DO NOT work directly on `main`.
+
+Inside the VS Code terminal:
+
+```bash
+git checkout -b your-branch-name
+```
+
+Example:
+
+```bash
+git checkout -b migel-feature-ui
+```
+
+This creates and switches to your personal development branch.
+
+---
+
+## 4. Push Your Branch to GitHub
+
+```bash
+git push -u origin your-branch-name
+```
+
+Example:
+
+```bash
+git push -u origin migel-feature-ui
+```
+
+---
+
+## 5. Sync With Latest Changes
+
+Before starting development each day:
+
+```bash
+git pull origin main
+```
+
+If working on your branch:
+
+```bash
+git checkout your-branch-name
+```
+
+Then merge the latest updates:
+
+```bash
+git merge main
+```
+
+---
+
+# Git Workflow
+
+## Pull Latest Changes
+
+```bash
+git pull
+```
+
+## Add Changes
+
+```bash
+git add .
+```
+
+## Commit Changes
+
+```bash
+git commit -m "Your message here"
+```
+
+## Push Changes
+
+```bash
+git push
+```
+
+---
+
+# Important Notes
+
+## Do NOT Upload These Files/Folders
+
+The following should remain excluded from GitHub:
+
+```txt
+/vendor
+/node_modules
+.env
+```
+
+---
+
+## Upload These Files
+
+Important project files that SHOULD be uploaded:
+
+```txt
+app/
+routes/
+resources/
+database/sql/pagibig.sql
+.env.example
+composer.json
+```
+
+---
+
+# Recommended Development Practices
+
+* Do not manually edit the production database.
+* Keep database updates synchronized with the team.
+* Use Git commits with clear messages.
+* Test features locally before pushing.
+* Pull latest changes before starting development.
+
+---
+
+# License
+
+This project is for academic and educational purposes only.
