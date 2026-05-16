@@ -142,6 +142,108 @@ http://127.0.0.1:8000
 
 ---
 
+# Repository Setup Using Forking
+
+## 1. Fork the Repository
+
+Each team member should first fork the repository on GitHub.
+
+1. Open the main repository on GitHub.
+2. Click the `Fork` button on the top-right corner.
+3. This creates your own copy of the repository under your GitHub account.
+
+---
+
+## 2. Clone Your Fork Using VS Code
+
+### Option A — Using VS Code GUI
+
+1. Open Visual Studio Code
+2. Press:
+
+```txt
+Ctrl + Shift + P
+```
+
+3. Search:
+
+```txt
+Git: Clone
+```
+
+4. Paste your forked repository URL.
+5. Choose a local folder.
+6. Open the project after cloning.
+
+---
+
+### Option B — Using VS Code Terminal
+
+Open a terminal inside VS Code and run:
+
+```bash
+git clone <your-fork-url>
+cd pagconnect
+```
+
+---
+
+## 3. Create Your Own Development Branch
+
+After cloning, DO NOT work directly on `main`.
+
+Inside the VS Code terminal:
+
+```bash
+git checkout -b your-branch-name
+```
+
+Example:
+
+```bash
+git checkout -b migel-feature-ui
+```
+
+This creates and switches to your personal development branch.
+
+---
+
+## 4. Push Your Branch to GitHub
+
+```bash
+git push -u origin your-branch-name
+```
+
+Example:
+
+```bash
+git push -u origin migel-feature-ui
+```
+
+---
+
+## 5. Sync With Latest Changes
+
+Before starting development each day:
+
+```bash
+git pull origin main
+```
+
+If working on your branch:
+
+```bash
+git checkout your-branch-name
+```
+
+Then merge the latest updates:
+
+```bash
+git merge main
+```
+
+---
+
 # Git Workflow
 
 ## Pull Latest Changes
@@ -207,6 +309,7 @@ composer.json
 * Test features locally before pushing.
 * Pull latest changes before starting development.
 
+---
 
 # License
 
