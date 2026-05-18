@@ -57,3 +57,34 @@ This includes:
 5. Install JBDC Driver
   - This will serve as the connection of our database with Java.
   - https://dev.mysql.com/downloads/connector/j/
+
+# Collaborate on this Repository
+
+Fork the Repository
+  1. Open the repository on GitHub
+  2. Click the Fork button
+  3. Create your own copy of the repository
+
+Clone Your Fork
+  - git clone <your-fork-link>
+
+Open VSCode/IDE
+  1. In bash (terminal or ctrl + `), enter:
+  - git checkout -b feature-yourname
+  2. This will create your own branch, then pull latest changes:
+  - git pull origin main
+  3. Then, push your branch:
+  - git push origin feature-yourname
+  4. Commit message:
+  - git commit -m "Added student CRUD functionality"
+
+# Contributors:
+Group members:
+1. Yeshua Arjona
+2. James Escanillas
+3. James Patrick Isidro
+4. Raven Rayo
+5. Migel Tan
+
+# License
+  - Academic use only.
