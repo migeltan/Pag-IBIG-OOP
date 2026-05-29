@@ -1,5 +1,6 @@
-package ui;
+package ui.frames;
 
+import ui.utils.NewPassword;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;

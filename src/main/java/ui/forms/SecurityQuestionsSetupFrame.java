@@ -1,4 +1,6 @@
-package ui;
+package ui.forms;
+
+import ui.frames.SignInFrame;
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;

@@ -1,4 +1,4 @@
-package ui;
+package ui.frames;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -39,7 +39,7 @@ public class LoginFrame extends JFrame {
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setOpaque(false);
 
-        ImageIcon logoIcon = loadAndScaleIcon("logo.png", 80, 80);
+        ImageIcon logoIcon = loadAndScaleIcon("/ui/assets/logo.png", 80, 80);
         JLabel logoLabel = new JLabel(logoIcon != null ? logoIcon : new ImageIcon());
         logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 

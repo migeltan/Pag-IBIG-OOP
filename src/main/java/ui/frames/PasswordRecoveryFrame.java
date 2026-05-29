@@ -1,8 +1,9 @@
-package ui;
+package ui.frames;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import javax.swing.plaf.nimbus.NimbusLookAndFeel;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashMap;

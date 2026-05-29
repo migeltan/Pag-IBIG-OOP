@@ -1,8 +1,11 @@
-package ui;
+package ui.frames;
+
+import ui.utils.NewPassword;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.*;
+
 import java.awt.*;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;

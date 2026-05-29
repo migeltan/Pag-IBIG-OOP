@@ -1,7 +1,15 @@
-package ui;
+package ui.frames;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
+import ui.forms.MemberRecordForm;
+import ui.forms.SecurityQuestionsSetupFrame;
+import ui.views.CurrentEmpFormView;
+import ui.views.HeirsFormView;
+import ui.views.MemberInfoFormView;
+import ui.views.PrevEmpFormView;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -262,10 +270,10 @@ public class SignInFrame extends JFrame {
         gridPanel.setOpaque(false);
         gridPanel.setBorder(new EmptyBorder(10, 28, 32, 28));
 
-        ImageIcon memberIcon     = loadAndScaleIcon("memberinfo.png",  260, 180);
-        ImageIcon heirsIcon      = loadAndScaleIcon("heirs.png",       200, 150);
-        ImageIcon currentEmpIcon = loadAndScaleIcon("currentEmp.png",  220, 160);
-        ImageIcon prevEmpIcon    = loadAndScaleIcon("prevEmp.png",     220, 160);
+        ImageIcon memberIcon     = loadAndScaleIcon("/ui/assets/memberinfo.png",  260, 180);
+        ImageIcon heirsIcon      = loadAndScaleIcon("/ui/assets/heirs.png",       200, 150);
+        ImageIcon currentEmpIcon = loadAndScaleIcon("/ui/assets/currentEmp.png",  220, 160);
+        ImageIcon prevEmpIcon    = loadAndScaleIcon("/ui/assets/prevEmp.png",     220, 160);
 
         Color[] blueAcc   = {new Color(59,130,246,60),  new Color(59,130,246,100),  new Color(59,130,246)};
         Color[] tealAcc   = {new Color(20,184,166,60),  new Color(20,184,166,100),  new Color(20,184,166)};

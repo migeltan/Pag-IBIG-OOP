@@ -1,4 +1,6 @@
-package ui;
+package ui.views;
+
+import ui.frames.SignInFrame;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;

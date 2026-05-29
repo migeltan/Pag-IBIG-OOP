@@ -1,4 +1,4 @@
-package ui;
+package ui.forms;
 
 import javax.swing.*;
 import javax.swing.border.*;

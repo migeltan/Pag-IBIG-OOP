@@ -1,9 +1,16 @@
-package ui;
+package ui.forms;
+
+import dao.MemberDAO;
+import main.RegistrationSession;
+import models.MemberTable;
+import ui.frames.SignUpFrame;
 
 import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.math.BigDecimal;
+import java.sql.Date;
 
 public class MemberInfoForm extends JFrame {
 
@@ -11,6 +18,7 @@ public class MemberInfoForm extends JFrame {
     private final Color darkBg2     = new Color(21, 101, 192);
     private final Color accentGreen = new Color(96, 216, 164);
     private final Color accentRed   = new Color(255, 99, 132);
+    private final Color accentAmber = new Color(251, 191, 36);
     private final Color textWhite   = Color.WHITE;
 
     // ── Fields ───────────────────────────────────────────────────────────────
@@ -20,6 +28,7 @@ public class MemberInfoForm extends JFrame {
             preferredMailingAddressBox, citizenshipBox;
 
     public JTextField membershipTypeOthersField;
+    public JTextField membershipCategoryOthersField;
     public JTextField memberNameField, fatherNameField, motherNameField, spouseNameField;
     public JTextField birthdateField, birthplaceField, crnField;
     public JTextField tinField, sssField, employeeNumberField;
@@ -27,6 +36,10 @@ public class MemberInfoForm extends JFrame {
     public JTextField homeTelNumField, cellphoneNumField;
     public JTextField busDirectLineField, busTrunkLineField, localField, emailAddressField;
     public JTextField allowBasicField, allowOtherSourcesField, totalMoIncomeField;
+
+    // ── "Others" wrapper panels (shown/hidden) ───────────────────────────────
+    private JPanel membershipTypeOthersPanel;
+    private JPanel membershipCategoryOthersPanel;
 
     public MemberInfoForm() {
 
@@ -95,7 +108,7 @@ public class MemberInfoForm extends JFrame {
         scroll.getVerticalScrollBar().setUnitIncrement(16);
 
         // ── Bottom Buttons ───────────────────────────────────────────────────
-        JButton backBtn   = buildButton("Back",   accentRed);
+        JButton backBtn   = buildButton("Back",  accentRed);
         JButton submitBtn = buildButton("Save",  accentGreen);
 
         backBtn.addActionListener(e -> {
@@ -106,20 +119,13 @@ public class MemberInfoForm extends JFrame {
                     JOptionPane.YES_NO_OPTION,
                     JOptionPane.WARNING_MESSAGE
             );
-
             if (choice == JOptionPane.YES_OPTION) {
                 dispose();
-                SwingUtilities.invokeLater(() -> {
-                    SignUpFrame signUpFrame = new SignUpFrame();
-                    signUpFrame.setVisible(true);
-                });
+                SwingUtilities.invokeLater(() -> new SignUpFrame());
             }
         });
 
-        submitBtn.addActionListener(e ->
-                JOptionPane.showMessageDialog(this,
-                        "Member information submitted successfully!",
-                        "Success", JOptionPane.INFORMATION_MESSAGE));
+        submitBtn.addActionListener(e -> handleSave());
 
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         bottom.setOpaque(false);
@@ -136,6 +142,132 @@ public class MemberInfoForm extends JFrame {
         setVisible(true);
     }
 
+    // ── Handle Save ───────────────────────────────────────────────────────────
+    private void handleSave() {
+
+        // ── Validate required fields ─────────────────────────────────────────
+        if (isBlank(memberNameField)
+                || isBlank(birthdateField)
+                || isBlank(birthplaceField)
+                || isBlank(cellphoneNumField)
+                || isBlank(presentHomeAddressField)
+                || isBlank(permanentHomeAddressField)
+                || isBlank(allowBasicField)
+                || isComboDefault(occupationalStatusBox)
+                || isComboDefault(membershipTypeBox)
+                || isComboDefault(membershipCategoryBox)
+                || isComboDefault(maritalStatusBox)
+                || isComboDefault(sexBox)
+                || isComboDefault(citizenshipBox)
+                || isComboDefault(frequencyOfMembershipSavingsBox)
+                || isComboDefault(preferredMailingAddressBox)) {
+            showError("Please fill in all required (*) fields.");
+            return;
+        }
+
+        // ── Validate birthdate format ────────────────────────────────────────
+        Date birthdate;
+        try {
+            birthdate = Date.valueOf(birthdateField.getText().trim());
+        } catch (IllegalArgumentException ex) {
+            showError("Birthdate must be in YYYY-MM-DD format.");
+            return;
+        }
+
+        // ── Build MemberTable object ─────────────────────────────────────────
+        String mid = RegistrationSession.getInstance().getTempMID();
+
+        String membershipType = (String) membershipTypeBox.getSelectedItem();
+        String membershipTypeOthers = membershipType.equals("Others")
+                ? membershipTypeOthersField.getText().trim()
+                : null;
+
+        String membershipCategory = (String) membershipCategoryBox.getSelectedItem();
+        String membershipCategoryOthers = membershipCategory.equals("Others")
+                ? membershipCategoryOthersField.getText().trim()
+                : null;
+
+        // Map combo display values to DB enum values
+        String occupationalStatus = toDbEnum((String) occupationalStatusBox.getSelectedItem());
+        String membershipTypeDb   = toMembershipTypeEnum(membershipType);
+        String membershipCatDb    = toMembershipCategoryEnum(membershipCategory);
+        String maritalStatus      = toMaritalEnum((String) maritalStatusBox.getSelectedItem());
+        String sex                = ((String) sexBox.getSelectedItem()).toUpperCase();
+        String citizenship        = citizenshipBox.getSelectedItem().equals("Filipino") ? "Filipino" : citizenshipBox.getSelectedItem().toString();
+        String frequency          = (String) frequencyOfMembershipSavingsBox.getSelectedItem();
+        String mailingAddress     = toMailingEnum((String) preferredMailingAddressBox.getSelectedItem());
+
+        BigDecimal allowBasic = parseBigDecimal(allowBasicField.getText());
+        BigDecimal allowOther = parseBigDecimal(allowOtherSourcesField.getText());
+        BigDecimal totalIncome = allowBasic.add(allowOther);
+
+        Integer empNumber = null;
+        String empNumText = employeeNumberField.getText().trim();
+        if (!empNumText.isEmpty()) {
+            try { empNumber = Integer.parseInt(empNumText); }
+            catch (NumberFormatException ex) {
+                showError("Employee Number must be a valid number.");
+                return;
+            }
+        }
+
+        MemberTable member = new MemberTable(
+                mid,
+                occupationalStatus,
+                membershipTypeDb,
+                membershipTypeOthers,
+                membershipCatDb,
+                membershipCategoryOthers,
+                memberNameField.getText().trim(),
+                fatherNameField.getText().trim(),
+                motherNameField.getText().trim(),
+                spouseNameField.getText().trim(),
+                birthdate,
+                maritalStatus,
+                birthplaceField.getText().trim(),
+                citizenship,
+                sex,
+                crnField.getText().trim(),
+                frequency,
+                tinField.getText().trim(),
+                sssField.getText().trim(),
+                empNumber,
+                presentHomeAddressField.getText().trim(),
+                permanentHomeAddressField.getText().trim(),
+                mailingAddress,
+                homeTelNumField.getText().trim(),
+                cellphoneNumField.getText().trim(),
+                busDirectLineField.getText().trim(),
+                busTrunkLineField.getText().trim(),
+                localField.getText().trim(),
+                emailAddressField.getText().trim(),
+                allowBasic,
+                allowOther,
+                totalIncome
+        );
+
+        // ── Save to DB ───────────────────────────────────────────────────────
+        MemberDAO dao = new MemberDAO();
+        boolean saved = dao.insertMember(member);
+
+        if (!saved) {
+            showError("Failed to save. Please check your connection and try again.");
+            return;
+        }
+
+        // ── Mark session done + store member data ────────────────────────────
+        RegistrationSession session = RegistrationSession.getInstance();
+        session.setMemberData(member);
+        session.setMemberInfoDone(true);
+
+        JOptionPane.showMessageDialog(this,
+                "Member information saved successfully!",
+                "Success", JOptionPane.INFORMATION_MESSAGE);
+
+        dispose();
+        SwingUtilities.invokeLater(() -> new SignUpFrame());
+    }
+
     // ── Build Form Content ────────────────────────────────────────────────────
     private JPanel buildContent() {
 
@@ -149,45 +281,63 @@ public class MemberInfoForm extends JFrame {
         c.add(vgap(14));
 
         JPanel r1 = row(3);
-        r1.add(lf("Pag-IBIG MID No. *",
-                pagIbigMidNoField = tf(14)));
+        pagIbigMidNoField = tf(14);
+        pagIbigMidNoField.setText(RegistrationSession.getInstance().getTempMID());
+        pagIbigMidNoField.setEditable(false);
+        pagIbigMidNoField.setForeground(accentAmber);
+        r1.add(lf("Pag-IBIG MID No. (Temporary)", pagIbigMidNoField));
 
-        r1.add(lf("Membership Type *",
-                membershipTypeBox = cb(new String[]{
-                        "Select",
-                        "Employed",
-                        "Overseas Filipino Worker",
-                        "Self-Employed",
-                        "Others"
-                })));
+        membershipTypeBox = cb(new String[]{
+                "Select", "Employed", "Overseas Filipino Worker", "Self-Employed", "Others"
+        });
+        r1.add(lf("Membership Type *", membershipTypeBox));
 
- 
+        membershipCategoryBox = cb(new String[]{
+                "Select", "Private", "Government", "Private Household",
+                "Overseas Filipino Worker", "Professional/Business Owner",
+                "Job Order Personnel", "Other Earning Groups", "Others"
+        });
+        r1.add(lf("Membership Category *", membershipCategoryBox));
         c.add(r1);
-        c.add(vgap(16));
+        c.add(vgap(10));
+
+        // ── Others fields (hidden by default) ───────────────────────────────
+        membershipTypeOthersField = tf(100);
+        membershipTypeOthersPanel = othersPanel("Membership Type — please specify", membershipTypeOthersField);
+        membershipTypeOthersPanel.setVisible(false);
+        c.add(membershipTypeOthersPanel);
+
+        membershipCategoryOthersField = tf(100);
+        membershipCategoryOthersPanel = othersPanel("Membership Category — please specify", membershipCategoryOthersField);
+        membershipCategoryOthersPanel.setVisible(false);
+        c.add(membershipCategoryOthersPanel);
+
+        // ── Show/hide Others panels based on combo selection ─────────────────
+        membershipTypeBox.addActionListener(e -> {
+            boolean show = "Others".equals(membershipTypeBox.getSelectedItem());
+            membershipTypeOthersPanel.setVisible(show);
+            c.revalidate();
+            c.repaint();
+        });
+
+        membershipCategoryBox.addActionListener(e -> {
+            boolean show = "Others".equals(membershipCategoryBox.getSelectedItem());
+            membershipCategoryOthersPanel.setVisible(show);
+            c.revalidate();
+            c.repaint();
+        });
+
+        c.add(vgap(10));
 
         JPanel r2 = row(2);
-        r2.add(lf("Membership Category *",
-                membershipCategoryBox = cb(new String[]{
-                        "Select",
-                        "Private",
-                        "Government",
-                        "Private Household",
-                        "Overseas Filipino Worker",
-                        "Professional/Business Owner",
-                        "Job Order Personnel",
-                        "Other Earning Groups",
-                        "Others"
-                })));
-        
-
         r2.add(lf("Occupational Status *",
                 occupationalStatusBox = cb(new String[]{
-                        "Select",
-                        "Employed",
-                        "Unemployed",
-                        "First Time Jobseeker"
+                        "Select", "Employed", "Unemployed", "First Time Jobseeker"
                 })));
-
+        r2.add(lf("Frequency of Membership Savings *",
+                frequencyOfMembershipSavingsBox = cb(new String[]{
+                        "Select", "Monthly", "Quarterly", "Semi-Annual", "Annual"
+                })));
         c.add(r2);
         c.add(vgap(26));
 
@@ -209,31 +359,25 @@ public class MemberInfoForm extends JFrame {
 
         JPanel r5 = row(3);
         r5.add(lf("Birthdate (YYYY-MM-DD) *", birthdateField  = tf(10)));
-        r5.add(lf("Birthplace *",             birthplaceField = tf(20)));
+        r5.add(lf("Birthplace *",             birthplaceField = tf(45)));
         r5.add(lf("Marital Status *",
                 maritalStatusBox = cb(new String[]{
-                        "Select",
-                        "Single",
-                        "Married",
-                        "Widowed",
-                        "Legally Separated",
-                        "Annulled"
+                        "Select", "Single", "Married", "Widowed", "Legally Separated", "Annulled"
                 })));
         c.add(r5);
         c.add(vgap(16));
 
         JPanel r6 = row(3);
-        r6.add(lf("Sex *",
-                sexBox = cb(new String[]{"Select", "Male", "Female"})));
-        r6.add(lf("Citizenship *",  citizenshipBox = cb(new String[]{"Select", "Filipino", "Other"})));
-        r6.add(lf("CRN",            crnField       = tf(12)));
+        r6.add(lf("Sex *",         sexBox         = cb(new String[]{"Select", "Male", "Female"})));
+        r6.add(lf("Citizenship *", citizenshipBox = cb(new String[]{"Select", "Filipino", "Other"})));
+        r6.add(lf("CRN",           crnField       = tf(12)));
         c.add(r6);
         c.add(vgap(16));
 
         JPanel r7 = row(3);
-        r7.add(lf("TIN",            tinField            = tf(14)));
-        r7.add(lf("SSS No.",        sssField            = tf(12)));
-        r7.add(lf("Employee No.",   employeeNumberField = tf(14)));
+        r7.add(lf("TIN",           tinField            = tf(14)));
+        r7.add(lf("SSS No.",       sssField            = tf(12)));
+        r7.add(lf("Employee No.",  employeeNumberField = tf(14)));
         c.add(r7);
         c.add(vgap(26));
 
@@ -251,22 +395,11 @@ public class MemberInfoForm extends JFrame {
         c.add(r9);
         c.add(vgap(16));
 
-        JPanel r10 = row(2);
+        JPanel r10 = row(1);
         r10.add(lf("Preferred Mailing Address *",
                 preferredMailingAddressBox = cb(new String[]{
-                        "Select",
-                        "Present Home Address",
-                        "Permanent Home Address",
-                        "Employer/Business Address"
-                })));
-
-        r10.add(lf("Frequency of Membership Savings *",
-                frequencyOfMembershipSavingsBox = cb(new String[]{
-                        "Select",
-                        "Monthly",
-                        "Quarterly",
-                        "Semi-Annual",
-                        "Annual"
+                        "Select", "Present Home Address",
+                        "Permanent Home Address", "Employer/Business Address"
                 })));
         c.add(r10);
         c.add(vgap(26));
@@ -294,13 +427,13 @@ public class MemberInfoForm extends JFrame {
         c.add(vgap(14));
 
         JPanel r13 = row(3);
-        r13.add(lf("Basic Allowance *",       allowBasicField        = tf(20)));
-        r13.add(lf("Other Sources",           allowOtherSourcesField = tf(20)));
-        r13.add(lf("Total Monthly Income",    totalMoIncomeField     = tf(20)));
+        r13.add(lf("Basic Allowance *",    allowBasicField        = tf(20)));
+        r13.add(lf("Other Sources",        allowOtherSourcesField = tf(20)));
+        r13.add(lf("Total Monthly Income", totalMoIncomeField     = tf(20)));
         c.add(r13);
 
         totalMoIncomeField.setEditable(false);
-        totalMoIncomeField.setForeground(new Color(96, 216, 164));
+        totalMoIncomeField.setForeground(accentGreen);
 
         FocusAdapter income = new FocusAdapter() {
             public void focusLost(FocusEvent e) { computeTotalIncome(); }
@@ -309,6 +442,14 @@ public class MemberInfoForm extends JFrame {
         allowOtherSourcesField.addFocusListener(income);
 
         return c;
+    }
+
+    // ── Others Panel (label + text field, shown when "Others" is selected) ───
+    private JPanel othersPanel(String label, JTextField field) {
+        JPanel row = row(1);
+        row.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
+        row.add(lf(label, field));
+        return row;
     }
 
     // ── Compute Total Income ──────────────────────────────────────────────────
@@ -325,6 +466,70 @@ public class MemberInfoForm extends JFrame {
         catch (Exception e) { return 0; }
     }
 
+    private BigDecimal parseBigDecimal(String s) {
+        try { return new BigDecimal(s.replace(",", "").trim()); }
+        catch (Exception e) { return BigDecimal.ZERO; }
+    }
+
+    // ── DB Enum Mappers ───────────────────────────────────────────────────────
+    private String toDbEnum(String occupational) {
+        switch (occupational) {
+            case "Employed":            return "EMPLOYED";
+            case "Unemployed":          return "UNEMPLOYED";
+            case "First Time Jobseeker": return "FIRST TIME JOBSEEKERS";
+            default:                    return occupational.toUpperCase();
+        }
+    }
+
+    private String toMembershipTypeEnum(String type) {
+        switch (type) {
+            case "Employed":                  return "EMPLOYED";
+            case "Overseas Filipino Worker":  return "OVERSEAS FILIPINO WORKER";
+            case "Self-Employed":             return "SELF-EMPLOYED";
+            default:                          return "EMPLOYED";
+        }
+    }
+
+    private String toMembershipCategoryEnum(String cat) {
+        switch (cat) {
+            case "Private":                    return "PRIVATE";
+            case "Government":                 return "GOVERNMENT";
+            case "Private Household":          return "PRIVATE HOUSEHOLD";
+            case "Overseas Filipino Worker":   return "OVERSEAS FILIPINO WORKER";
+            case "Professional/Business Owner":return "PROFESSIONAL/BUSINESS OWNER";
+            case "Job Order Personnel":        return "JOB ORDER PERSONNEL";
+            case "Other Earning Groups":       return "OTHER EARNING GROUPS";
+            default:                           return "PRIVATE";
+        }
+    }
+
+    private String toMaritalEnum(String status) {
+        switch (status) {
+            case "Single":            return "SINGLE";
+            case "Married":           return "MARRIED";
+            case "Widowed":           return "WIDOWED";
+            case "Legally Separated": return "LEGALLY SEPARATED";
+            case "Annulled":          return "ANNULED";   // matches DB spelling
+            default:                  return "SINGLE";
+        }
+    }
+
+    private String toMailingEnum(String mailing) {
+        switch (mailing) {
+            case "Present Home Address":    return "Present Home Address";
+            case "Permanent Home Address":  return "Permanent Home Address";
+            case "Employer/Business Address": return "Employer/Business Address";
+            default:                        return "Present Home Address";
+        }
+    }
+
+    // ── Validation Helpers ────────────────────────────────────────────────────
+    private boolean isBlank(JTextField f)      { return f.getText().trim().isEmpty(); }
+    private boolean isComboDefault(JComboBox<?> b) { return "Select".equals(b.getSelectedItem()); }
+    private void showError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Validation Error", JOptionPane.WARNING_MESSAGE);
+    }
+
     // ── Section Header ────────────────────────────────────────────────────────
     private JPanel sectionHeader(String text) {
         JPanel p = new JPanel(new BorderLayout());
@@ -336,7 +541,6 @@ public class MemberInfoForm extends JFrame {
         return p;
     }
 
-    // ── Row ───────────────────────────────────────────────────────────────────
     private JPanel row(int cols) {
         JPanel p = new JPanel(new GridLayout(1, cols, 14, 0));
         p.setOpaque(false);
@@ -344,7 +548,6 @@ public class MemberInfoForm extends JFrame {
         return p;
     }
 
-    // ── Label + Field ─────────────────────────────────────────────────────────
     private JPanel lf(String label, JComponent field) {
         JPanel p = new JPanel(new BorderLayout(0, 6));
         p.setOpaque(false);
@@ -356,7 +559,6 @@ public class MemberInfoForm extends JFrame {
         return p;
     }
 
-    // ── Text Field (with max-length document filter) ──────────────────────────
     private JTextField tf(int maxLen) {
         JTextField field = new JTextField() {
             @Override
@@ -380,7 +582,6 @@ public class MemberInfoForm extends JFrame {
         field.setFont(new Font("Arial", Font.PLAIN, 14));
         field.setBorder(new EmptyBorder(10, 14, 10, 14));
 
-        // Max-length filter
         ((javax.swing.text.AbstractDocument) field.getDocument())
                 .setDocumentFilter(new javax.swing.text.DocumentFilter() {
                     @Override
@@ -407,7 +608,6 @@ public class MemberInfoForm extends JFrame {
         return field;
     }
 
-    // ── Combo Box ─────────────────────────────────────────────────────────────
     private JComboBox<String> cb(String[] items) {
         JComboBox<String> box = new JComboBox<>(items);
         box.setFont(new Font("Arial", Font.PLAIN, 13));
@@ -416,7 +616,6 @@ public class MemberInfoForm extends JFrame {
         return box;
     }
 
-    // ── Button ────────────────────────────────────────────────────────────────
     private JButton buildButton(String text, Color color) {
         JButton btn = new JButton(text) {
             @Override
@@ -446,4 +645,3 @@ public class MemberInfoForm extends JFrame {
         SwingUtilities.invokeLater(MemberInfoForm::new);
     }
 }
-

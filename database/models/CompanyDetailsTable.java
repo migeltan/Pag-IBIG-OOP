@@ -5,16 +5,14 @@ public class CompanyDetailsTable {
     private String companyCode;
     private String companyName;
     private String companyAddress;
-    private String officeAssignment;   // 'HEAD OFFICE' | 'BRANCH'
-    private String branchLocation;     // nullable
-
-    // ─── Constructors ────────────────────────────────────────────────────────────
+    private String officeAssignment;
+    private String branchLocation;
 
     public CompanyDetailsTable() {}
 
     public CompanyDetailsTable(String companyCode, String companyName,
-                               String companyAddress, String officeAssignment,
-                               String branchLocation) {
+                                String companyAddress, String officeAssignment,
+                                String branchLocation) {
         this.companyCode      = companyCode;
         this.companyName      = companyName;
         this.companyAddress   = companyAddress;
@@ -22,31 +20,23 @@ public class CompanyDetailsTable {
         this.branchLocation   = branchLocation;
     }
 
-    // ─── Getters & Setters ───────────────────────────────────────────────────────
-
     public String getCompanyCode()                     { return companyCode; }
-    public void setCompanyCode(String companyCode)     { this.companyCode = companyCode; }
+    public void   setCompanyCode(String v)             { this.companyCode = v; }
 
     public String getCompanyName()                     { return companyName; }
-    public void setCompanyName(String companyName)     { this.companyName = companyName; }
+    public void   setCompanyName(String v)             { this.companyName = v; }
 
     public String getCompanyAddress()                  { return companyAddress; }
-    public void setCompanyAddress(String companyAddress){ this.companyAddress = companyAddress; }
+    public void   setCompanyAddress(String v)          { this.companyAddress = v; }
 
     public String getOfficeAssignment()                { return officeAssignment; }
-    public void setOfficeAssignment(String v)          { this.officeAssignment = v; }
+    public void   setOfficeAssignment(String v)        { this.officeAssignment = v; }
 
     public String getBranchLocation()                  { return branchLocation; }
-    public void setBranchLocation(String branchLocation){ this.branchLocation = branchLocation; }
+    public void   setBranchLocation(String v)          { this.branchLocation = v; }
 
     @Override
     public String toString() {
-        return "CompanyDetailsTable{" +
-                "companyCode='" + companyCode + '\'' +
-                ", companyName='" + companyName + '\'' +
-                ", companyAddress='" + companyAddress + '\'' +
-                ", officeAssignment='" + officeAssignment + '\'' +
-                ", branchLocation='" + branchLocation + '\'' +
-                '}';
+        return "CompanyDetailsTable{code='" + companyCode + "', name='" + companyName + "'}";
     }
 }

@@ -226,4 +226,43 @@ public class MemberDAO {
         m.setTotalMoIncome(rs.getBigDecimal("Total_Mo_Income"));
         return m;
     }
+    
+ // ─── GENERATE NEXT MID ───────────────────────────────────────────────────────
+    // Add this method inside MemberDAO.java alongside the other CRUD methods.
+
+    /**
+     * Reads the highest existing PagIbig_MID_No from membertable,
+     * increments the last 4-digit segment by 1, and returns the new MID.
+     *
+     * Format: XXXX-XXXX-XXXX  (only the last 4 digits are incremented)
+     * Example: 1212-3434-5659  →  1212-3434-5660
+     *
+     * Returns null if the query fails.
+     */
+    public String generateNextMID() {
+        String sql = "SELECT PagIbig_MID_No FROM membertable "
+                   + "ORDER BY PagIbig_MID_No DESC LIMIT 1";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+
+            if (rs.next()) {
+                String lastMID = rs.getString("PagIbig_MID_No"); // e.g. "1212-3434-5659"
+                String[] parts = lastMID.split("-");              // ["1212","3434","5659"]
+
+                int lastSegment = Integer.parseInt(parts[2]);     // 5659
+                lastSegment++;                                    // 5660
+
+                // Pad back to 4 digits (e.g. 0001 stays 0001)
+                return parts[0] + "-" + parts[1] + "-" + String.format("%04d", lastSegment);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("[MemberDAO] generateNextMID error: " + e.getMessage());
+        }
+        return null;
+    }
+    
 }
+

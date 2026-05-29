@@ -1,13 +1,22 @@
-package ui;
+package ui.frames;
 
+import dao.MemberDAO;
+import main.RegistrationSession;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+
+import ui.forms.CurrentEmpForm;
+import ui.forms.HeirsForm;
+import ui.forms.MemberInfoForm;
+import ui.forms.PrevEmpForm;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
 public class SignUpFrame extends JFrame {
 
+	private String tempMID;
     private final Color darkBg1      = new Color(10,  22,  40);   // deep navy
     private final Color darkBg2      = new Color(30,  79, 168);   // vivid blue
     private final Color glassWhite   = new Color(255, 255, 255, 18);
@@ -22,6 +31,19 @@ public class SignUpFrame extends JFrame {
         setSize(1024, 768);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
+        
+        MemberDAO memberDAO = new MemberDAO();
+        String generatedMID = memberDAO.generateNextMID();
+        if (generatedMID == null) {
+            JOptionPane.showMessageDialog(null,
+                "Could not connect to the database.\nPlease try again later.",
+                "Connection Error", JOptionPane.ERROR_MESSAGE);
+            dispose();
+            return;
+        }
+        tempMID = generatedMID;
+        RegistrationSession.reset();
+        RegistrationSession.getInstance().setTempMID(tempMID);
 
 
         DiagonalGradientPanel bg = new DiagonalGradientPanel(darkBg1, darkBg2);
@@ -57,6 +79,7 @@ public class SignUpFrame extends JFrame {
                 JOptionPane.WARNING_MESSAGE
             );
             if (choice == JOptionPane.YES_OPTION) {
+                RegistrationSession.reset();
                 new LoginFrame();
                 dispose();
             }
@@ -131,7 +154,7 @@ public class SignUpFrame extends JFrame {
         dot.setForeground(accentAmber);
         dot.setFont(new Font("Arial", Font.PLAIN, 10));
 
-        JLabel midLabel = new JLabel("  PAG-IBIG MID NO:  1234-5678-9012 ");
+        JLabel midLabel = new JLabel("  PAG-IBIG MID NO: " + tempMID + "");
         midLabel.setFont(new Font("Arial Black", Font.BOLD, 13));
         midLabel.setForeground(textWhite);
 
@@ -194,10 +217,10 @@ public class SignUpFrame extends JFrame {
         gridPanel.setBorder(new EmptyBorder(10, 28, 32, 28));
 
         // Load images
-        ImageIcon memberIcon     = loadAndScaleIcon("memberinfo.png",  260, 180);
-        ImageIcon heirsIcon      = loadAndScaleIcon("heirs.png",       200, 150);
-        ImageIcon currentEmpIcon = loadAndScaleIcon("currentEmp.png",  220, 160);
-        ImageIcon prevEmpIcon    = loadAndScaleIcon("prevEmp.png",     220, 160);
+        ImageIcon memberIcon     = loadAndScaleIcon("/ui/assets/memberinfo.png",  260, 180);
+        ImageIcon heirsIcon      = loadAndScaleIcon("/ui/assets/heirs.png",       200, 150);
+        ImageIcon currentEmpIcon = loadAndScaleIcon("/ui/assets/currentEmp.png",  220, 160);
+        ImageIcon prevEmpIcon    = loadAndScaleIcon("/ui/assets/prevEmp.png",     220, 160);
 
         Color[] blueAcc   = {new Color(59,130,246,60), new Color(59,130,246,100),  new Color(59,130,246)};
         Color[] tealAcc   = {new Color(20,184,166,60), new Color(20,184,166,100),  new Color(20,184,166)};
