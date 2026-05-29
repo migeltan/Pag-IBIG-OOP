@@ -42,7 +42,20 @@ public class SignInFrame extends JFrame {
 
         JButton logoutBtn = new JButton("[→] Logout");
         styleNavButton(logoutBtn);
-        logoutBtn.addActionListener(e -> { new LoginFrame(); dispose(); });
+        logoutBtn.addActionListener(e -> {
+            int choice = JOptionPane.showConfirmDialog(
+                    SignInFrame.this,
+                    "Are you sure you want to log out?",
+                    "Confirm Logout",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+            );
+
+            if (choice == JOptionPane.YES_OPTION) {
+                new LoginFrame();
+                dispose();
+            }
+        });
 
         topBarBg.add(logoutBtn, BorderLayout.EAST);
 
@@ -108,7 +121,11 @@ public class SignInFrame extends JFrame {
                 editBtn.setOpaque(false);
             }
         });
-        editBtn.addActionListener(e -> navigateTo("Edit Information Page"));
+        
+        editBtn.addActionListener(e -> {
+            new MemberRecordForm(SignInFrame.this).setVisible(true);
+            SignInFrame.this.setVisible(false);
+        });
 
         // ── SETTINGS BUTTON ─────────────────────────────────────────────────
         JButton settingsBtn = new JButton("⚙  Settings");
@@ -135,7 +152,10 @@ public class SignInFrame extends JFrame {
                 settingsBtn.setOpaque(false);
             }
         });
-        settingsBtn.addActionListener(e -> navigateTo("Settings Page"));
+        settingsBtn.addActionListener(e -> {
+            new SecurityQuestionsSetupFrame().setVisible(true);
+            SignInFrame.this.dispose();
+        });
 
         // Row holding both buttons side by side
         JPanel btnRow = new JPanel();
@@ -257,10 +277,45 @@ public class SignInFrame extends JFrame {
         DarkModuleCard btnCurrentEmp = new DarkModuleCard("CURRENT EMPLOYMENT INFORMATION",   "VIEW", "💼", purpleAcc, currentEmpIcon, 390, 30, 220, 160);
         DarkModuleCard btnPrevEmp    = new DarkModuleCard("PREVIOUS EMPLOYMENT INFORMATION",  "VIEW", "📋", amberAcc,  prevEmpIcon,    390, 30, 220, 160);
 
-        btnMember.addActionListener(e -> navigateTo("Member Information Page"));
-        btnHeirs.addActionListener(e -> navigateTo("Heirs Information Page"));
-        btnCurrentEmp.addActionListener(e -> navigateTo("Current Employment Page"));
-        btnPrevEmp.addActionListener(e -> navigateTo("Previous Employment Page"));
+        btnMember.addActionListener(e -> {
+            JFrame memberFrame = new JFrame("Pag-CONNECT — Member Information");
+            memberFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            memberFrame.setSize(1100, 750);
+            memberFrame.add(new MemberInfoFormView());
+            memberFrame.setLocationRelativeTo(null);
+            memberFrame.setVisible(true);
+            SignInFrame.this.dispose();
+        });
+
+        btnHeirs.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Heirs Information");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new HeirsFormView());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignInFrame.this.dispose();
+        });
+
+        btnCurrentEmp.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Current Employment");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new CurrentEmpFormView());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignInFrame.this.dispose();
+        });
+
+        btnPrevEmp.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Previous Employment");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new PrevEmpFormView());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignInFrame.this.dispose();
+        });
 
         gridPanel.add(btnMember);
         gridPanel.add(btnHeirs);
@@ -368,6 +423,35 @@ public class SignInFrame extends JFrame {
                     }
                 };
                 imgLbl.setBounds(imgX, imgY, imgW, imgH);
+
+                // ── FIX: stop the label from swallowing click events ─────────
+                imgLbl.setEnabled(false);
+                imgLbl.setFocusable(false);
+                imgLbl.addMouseListener(new MouseAdapter() {
+                    @Override public void mouseClicked(MouseEvent e) {
+                        DarkModuleCard.this.dispatchEvent(
+                            SwingUtilities.convertMouseEvent(imgLbl, e, DarkModuleCard.this));
+                    }
+                    @Override public void mousePressed(MouseEvent e) {
+                        DarkModuleCard.this.dispatchEvent(
+                            SwingUtilities.convertMouseEvent(imgLbl, e, DarkModuleCard.this));
+                    }
+                    @Override public void mouseReleased(MouseEvent e) {
+                        DarkModuleCard.this.dispatchEvent(
+                            SwingUtilities.convertMouseEvent(imgLbl, e, DarkModuleCard.this));
+                    }
+                    @Override public void mouseEntered(MouseEvent e) {
+                        // keep hover state in sync
+                        hovered = true;
+                        repaint();
+                    }
+                    @Override public void mouseExited(MouseEvent e) {
+                        hovered = false;
+                        repaint();
+                    }
+                });
+                // ─────────────────────────────────────────────────────────────
+
                 add(imgLbl);
             }
 

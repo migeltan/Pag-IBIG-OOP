@@ -140,7 +140,8 @@ public class LoginFrame extends JFrame {
         });
 
         resetPassBtn.addActionListener(e -> {
-             JOptionPane.showMessageDialog(this, "Redirecting to password reset...", "Reset Password", JOptionPane.INFORMATION_MESSAGE);
+            new PasswordRecoveryFrame().setVisible(true);
+            dispose();
         });
 
         leftPanel.add(signInLabel);

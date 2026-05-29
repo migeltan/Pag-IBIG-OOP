@@ -37,7 +37,7 @@ public class PasswordSentFrame extends JFrame {
         JPanel topBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 10));
         topBar.setOpaque(false);
         JButton backBtn = createNavButton("← BACK");
-        backBtn.addActionListener(e -> { new LoginFrame(); dispose(); });
+        backBtn.addActionListener(e -> { new PasswordRecoveryFrame(); dispose(); });
         topBar.add(backBtn);
         bg.add(topBar, BorderLayout.NORTH);
 
@@ -225,11 +225,9 @@ public class PasswordSentFrame extends JFrame {
                     "OTP Sent",
                     JOptionPane.INFORMATION_MESSAGE
                 );
+                new OtpVerifyFrame();
+                dispose();
             }
-                
-                
-            new OtpVerifyFrame();
-            dispose();
               
         });
 

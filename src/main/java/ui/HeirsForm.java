@@ -1,5 +1,317 @@
 package ui;
+import javax.swing.*;
+import javax.swing.border.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
+public class HeirsForm extends JPanel {
+   // ── Colors ───────────────────────────────────────────────────────────────
+   private final Color darkBg1     = new Color(8, 18, 36);
+   private final Color darkBg2     = new Color(16, 78, 160);
+   private final Color cardBg      = new Color(255, 255, 255, 18);
+   private final Color accentGreen = new Color(96, 216, 164);
+   private final Color accentRed   = new Color(255, 99, 132);
+   private final Color fieldBg     = new Color(15, 28, 55);
+   private final Color borderGlass = new Color(255, 255, 255, 45);
+   private final Color labelColor  = new Color(168, 208, 255);
+   // ── State ────────────────────────────────────────────────────────────────
+   private JPanel listPanel;
+   private int    heirCount = 0;
+   public  List<HeirEntry> entries = new ArrayList<>();
+   // ────────────────────────────────────────────────────────────────────────
+   public HeirsForm() {
+       setLayout(new BorderLayout());
+       // ── Gradient background ───────────────────────────────────────────────
+       JPanel bg = new JPanel(new BorderLayout()) {
+           @Override protected void paintComponent(Graphics g) {
+               super.paintComponent(g);
+               Graphics2D g2 = (Graphics2D) g;
+               g2.setPaint(new GradientPaint(0, 0, darkBg1, getWidth(), getHeight(), darkBg2));
+               g2.fillRect(0, 0, getWidth(), getHeight());
+           }
+       };
+       bg.setOpaque(true);
+       // ── Glass card — uses BorderLayout so SOUTH buttons are always pinned ──
+       JPanel card = new JPanel(new BorderLayout()) {
+           @Override protected void paintComponent(Graphics g) {
+               Graphics2D g2 = (Graphics2D) g.create();
+               g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+               g2.setColor(new Color(0, 0, 0, 50));
+               g2.fillRoundRect(4, 8, getWidth() - 8, getHeight() - 8, 24, 24);
+               g2.setColor(new Color(255, 255, 255, 18));
+               g2.fillRoundRect(0, 0, getWidth() - 4, getHeight() - 4, 24, 24);
+               g2.setColor(borderGlass);
+               g2.drawRoundRect(0, 0, getWidth() - 5, getHeight() - 5, 24, 24);
+               g2.setColor(accentGreen);
+               g2.setStroke(new BasicStroke(2.5f));
+               g2.drawLine(16, 0, getWidth() - 20, 0);
+               g2.dispose();
+               super.paintComponent(g);
+           }
+       };
+       card.setOpaque(false);
+       card.setBorder(new EmptyBorder(30, 40, 26, 40));
+       // ── Title (NORTH of card — never scrolls) ────────────────────────────
+       JLabel heading = new JLabel("Heirs & Dependents");
+       heading.setFont(new Font("Arial Black", Font.BOLD, 22));
+       heading.setForeground(Color.WHITE);
+       JLabel sub = new JLabel("Add your heirs and dependents information.");
+       sub.setFont(new Font("Arial", Font.PLAIN, 13));
+       sub.setForeground(new Color(255, 255, 255, 155));
+       JPanel titleText = new JPanel();
+       titleText.setOpaque(false);
+       titleText.setLayout(new BoxLayout(titleText, BoxLayout.Y_AXIS));
+       titleText.add(heading);
+       titleText.add(Box.createVerticalStrut(3));
+       titleText.add(sub);
+       titleText.setBorder(new EmptyBorder(0, 0, 16, 0));
+       card.add(titleText, BorderLayout.NORTH);
+       // ── Scrollable list + add-button ─────────────────────────────────────
+       listPanel = new JPanel();
+       listPanel.setOpaque(false);
+       listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
+       JButton addBtn = buildButton("+ Add Another Heir / Dependent", accentGreen);
+       addBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
+       addBtn.addActionListener(e -> addEntry());
+       // scrollContent holds the growing list + add button
+       JPanel scrollContent = new JPanel();
+       scrollContent.setOpaque(false);
+       scrollContent.setLayout(new BoxLayout(scrollContent, BoxLayout.Y_AXIS));
+       scrollContent.add(listPanel);
+       scrollContent.add(Box.createVerticalStrut(12));
+       scrollContent.add(addBtn);
+       scrollContent.add(Box.createVerticalStrut(4));
+       JScrollPane scroll = new JScrollPane(scrollContent);
+       scroll.setOpaque(false);
+       scroll.getViewport().setOpaque(false);
+       scroll.setBorder(null);
+       scroll.getVerticalScrollBar().setUnitIncrement(16);
+       scroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+       card.add(scroll, BorderLayout.CENTER);
+       // ── Bottom buttons (SOUTH of card — always visible) ──────────────────
+       JPanel bottomBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 0));
+       bottomBar.setOpaque(false);
+       bottomBar.setBorder(new EmptyBorder(14, 0, 0, 0));
+       JButton returnBtn   = buildButton("Back",   accentRed);
+       JButton continueBtn = buildButton("Save", accentGreen);
+       
+       returnBtn.addActionListener(e -> {
+    	    int choice = JOptionPane.showConfirmDialog(
+    	            HeirsForm.this,
+    	            "Are you sure you want to go back?\nUnsaved changes will be lost.",
+    	            "Return to Sign Up",
+    	            JOptionPane.YES_NO_OPTION,
+    	            JOptionPane.WARNING_MESSAGE
+    	    );
 
-public class HeirsForm {
+    	    if (choice == JOptionPane.YES_OPTION) {
+    	        Window currentWindow = SwingUtilities.getWindowAncestor(HeirsForm.this);
+    	        if (currentWindow != null) currentWindow.dispose();
+    	        SwingUtilities.invokeLater(() -> new SignUpFrame().setVisible(true));
+    	    }
+    	});
 
+       continueBtn.addActionListener(e ->
+               JOptionPane.showMessageDialog(this,
+                       "Member information submitted successfully!",
+                       "Success", JOptionPane.INFORMATION_MESSAGE));
+       bottomBar.add(returnBtn);
+       bottomBar.add(continueBtn);
+       card.add(bottomBar, BorderLayout.SOUTH);
+       // ── Card sits inside bg with fixed margins ────────────────────────────
+       // Use a wrapper with EmptyBorder to create the inset effect
+       JPanel cardWrap = new JPanel(new BorderLayout());
+       cardWrap.setOpaque(false);
+       cardWrap.setBorder(new EmptyBorder(28, 28, 28, 28));
+       cardWrap.add(card, BorderLayout.CENTER);
+       bg.add(cardWrap, BorderLayout.CENTER);
+       add(bg, BorderLayout.CENTER);
+       addEntry();
+   }
+   // ── Add Entry ─────────────────────────────────────────────────────────────
+   public void addEntry() {
+       heirCount++;
+       HeirEntry entry = new HeirEntry(heirCount, this);
+       entries.add(entry);
+       listPanel.add(entry);
+       listPanel.add(Box.createVerticalStrut(8));
+       listPanel.revalidate();
+       listPanel.repaint();
+   }
+   // ── Remove Entry ──────────────────────────────────────────────────────────
+   public void removeEntry(HeirEntry entry) {
+       if (entries.size() == 1) {
+           JOptionPane.showMessageDialog(this,
+               "At least one heir entry is required.",
+               "Cannot Remove", JOptionPane.WARNING_MESSAGE);
+           return;
+       }
+       entries.remove(entry);
+       Component[] comps = listPanel.getComponents();
+       for (int i = 0; i < comps.length; i++) {
+           if (comps[i] == entry) {
+               listPanel.remove(i);
+               if (i < listPanel.getComponentCount()) listPanel.remove(i);
+               break;
+           }
+       }
+       for (int i = 0; i < entries.size(); i++) entries.get(i).updateNumber(i + 1);
+       listPanel.revalidate();
+       listPanel.repaint();
+   }
+   // ── Heir Entry ────────────────────────────────────────────────────────────
+   public class HeirEntry extends JPanel {
+       private JLabel numberLabel;
+       public JTextField        pagIbigMidNoField;
+       public JTextField        heirsNameField;
+       public JTextField        heirsBirthdateField;
+       public JComboBox<String> heirsRelationshipBox;
+       public HeirEntry(int number, HeirsForm parent) {
+           setLayout(new BorderLayout());
+           setOpaque(false);
+           // Height: header(~30) + divider(1) + gap(10) + row1(52) + gap(10) + row2(52) + padding(28*2) = ~211
+           // Give it 215 so nothing is clipped
+           int H = 215;
+           setMaximumSize(new Dimension(Integer.MAX_VALUE, H));
+           setMinimumSize(new Dimension(0, H));
+           setPreferredSize(new Dimension(0, H));
+           // Inner glass panel
+           JPanel inner = new JPanel(new BorderLayout(0, 0)) {
+               @Override protected void paintComponent(Graphics g) {
+                   Graphics2D g2 = (Graphics2D) g.create();
+                   g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                   g2.setColor(new Color(255, 255, 255, 12));
+                   g2.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                   g2.setColor(new Color(255, 255, 255, 30));
+                   g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
+                   g2.dispose();
+                   super.paintComponent(g);
+               }
+           };
+           inner.setOpaque(false);
+           inner.setBorder(new EmptyBorder(14, 18, 14, 18));
+           // ── Header ───────────────────────────────────────────────────────
+           JPanel header = new JPanel(new BorderLayout());
+           header.setOpaque(false);
+           numberLabel = new JLabel("Heir / Dependent " + number);
+           numberLabel.setFont(new Font("Arial Black", Font.BOLD, 13));
+           numberLabel.setForeground(accentGreen);
+           JButton removeBtn = new JButton("✕ Remove");
+           removeBtn.setForeground(new Color(255, 120, 120));
+           removeBtn.setFont(new Font("Arial", Font.BOLD, 12));
+           removeBtn.setBorderPainted(false);
+           removeBtn.setContentAreaFilled(false);
+           removeBtn.setFocusPainted(false);
+           removeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+           removeBtn.addActionListener(e -> parent.removeEntry(this));
+           header.add(numberLabel, BorderLayout.WEST);
+           header.add(removeBtn,   BorderLayout.EAST);
+           // Divider under header
+           JPanel divider = new JPanel();
+           divider.setOpaque(true);
+           divider.setBackground(new Color(255, 255, 255, 40));
+           divider.setPreferredSize(new Dimension(0, 1));
+           JPanel headerBlock = new JPanel(new BorderLayout(0, 8));
+           headerBlock.setOpaque(false);
+           headerBlock.add(header,  BorderLayout.NORTH);
+           headerBlock.add(divider, BorderLayout.SOUTH);
+           // ── Fields ───────────────────────────────────────────────────────
+           pagIbigMidNoField    = buildTextField();
+           heirsNameField       = buildTextField();
+           heirsBirthdateField  = buildTextField();
+           heirsRelationshipBox = buildComboBox(new String[]{
+               "Select", "Spouse", "Child", "Parent", "Sibling", "Other"
+           });
+           JPanel row1 = buildRow();
+           row1.add(fieldPanel("PAG-IBIG MID NO.", pagIbigMidNoField));
+           row1.add(fieldPanel("HEIR'S NAME",      heirsNameField));
+           JPanel row2 = buildRow();
+           row2.add(fieldPanel("RELATIONSHIP",     heirsRelationshipBox));
+           row2.add(fieldPanel("BIRTHDATE",        heirsBirthdateField));
+           JPanel fields = new JPanel();
+           fields.setOpaque(false);
+           fields.setLayout(new BoxLayout(fields, BoxLayout.Y_AXIS));
+           fields.add(Box.createVerticalStrut(10));
+           fields.add(row1);
+           fields.add(Box.createVerticalStrut(10));
+           fields.add(row2);
+           inner.add(headerBlock, BorderLayout.NORTH);
+           inner.add(fields,      BorderLayout.CENTER);
+           add(inner, BorderLayout.CENTER);
+       }
+       public void updateNumber(int n) {
+           numberLabel.setText("Heir / Dependent " + n);
+       }
+   }
+   // ── Helpers ───────────────────────────────────────────────────────────────
+   /** Two-column row. Height fits label (15) + gap (4) + field (38) = 57, use 60. */
+   private JPanel buildRow() {
+       JPanel p = new JPanel(new GridLayout(1, 2, 14, 0));
+       p.setOpaque(false);
+       p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+       p.setPreferredSize(new Dimension(0, 60));
+       p.setMinimumSize(new Dimension(0, 60));
+       return p;
+   }
+   private JPanel fieldPanel(String label, JComponent field) {
+       JPanel p = new JPanel(new BorderLayout(0, 4));
+       p.setOpaque(false);
+       JLabel lbl = new JLabel(label);
+       lbl.setFont(new Font("Arial", Font.BOLD, 10));
+       lbl.setForeground(labelColor);
+       p.add(lbl,   BorderLayout.NORTH);
+       p.add(field, BorderLayout.CENTER);
+       return p;
+   }
+   private JTextField buildTextField() {
+       JTextField f = new JTextField();
+       f.setForeground(Color.WHITE);
+       f.setCaretColor(Color.WHITE);
+       f.setBackground(fieldBg);
+       f.setFont(new Font("Arial", Font.PLAIN, 13));
+       f.setBorder(new CompoundBorder(
+           new LineBorder(new Color(255, 255, 255, 40), 1, true),
+           new EmptyBorder(8, 12, 8, 12)));
+       return f;
+   }
+   private JComboBox<String> buildComboBox(String[] items) {
+       JComboBox<String> box = new JComboBox<>(items);
+       box.setFont(new Font("Arial", Font.PLAIN, 13));
+       box.setForeground(Color.WHITE);
+       box.setBackground(fieldBg);
+       return box;
+   }
+   private JButton buildButton(String text, Color color) {
+       JButton btn = new JButton(text) {
+           @Override protected void paintComponent(Graphics g) {
+               Graphics2D g2 = (Graphics2D) g.create();
+               g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+               g2.setColor(isEnabled() ? color : color.darker());
+               g2.fillRoundRect(0, 0, getWidth(), getHeight(), 8, 8);
+               g2.dispose();
+               super.paintComponent(g);
+           }
+       };
+       btn.setPreferredSize(new Dimension(220, 42));
+       btn.setForeground(new Color(8, 18, 36));
+       btn.setFont(new Font("Arial Black", Font.BOLD, 12));
+       btn.setFocusPainted(false);
+       btn.setContentAreaFilled(false);
+       btn.setOpaque(false);
+       btn.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 16));
+       btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+       return btn;
+   }
+   // ── Main ──────────────────────────────────────────────────────────────────
+   public static void main(String[] args) {
+       SwingUtilities.invokeLater(() -> {
+           JFrame f = new JFrame("Heirs Form");
+           f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+           f.setSize(1200, 750);
+           f.setLocationRelativeTo(null);
+           f.setContentPane(new HeirsForm());
+           f.setVisible(true);
+       });
+   }
 }
+

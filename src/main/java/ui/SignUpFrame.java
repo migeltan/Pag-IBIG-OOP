@@ -48,7 +48,19 @@ public class SignUpFrame extends JFrame {
 
         JButton backBtn    = new JButton("← BACK");
         styleNavButton(backBtn);
-        backBtn.addActionListener(e -> { new LoginFrame(); dispose(); });
+        backBtn.addActionListener(e -> {
+            int choice = JOptionPane.showConfirmDialog(
+                null,
+                "Are you sure you want to go back?\nUnsaved changes will be lost.",
+                "Confirm",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            if (choice == JOptionPane.YES_OPTION) {
+                new LoginFrame();
+                dispose();
+            }
+        });
 
         topBarBg.add(backBtn,   BorderLayout.WEST);
         
@@ -197,10 +209,40 @@ public class SignUpFrame extends JFrame {
         DarkModuleCard btnCurrentEmp = new DarkModuleCard("CURRENT EMPLOYMENT INFORMATION", "PENDING", "💼", purpleAcc, currentEmpIcon, 390, 30, 220, 160);
         DarkModuleCard btnPrevEmp    = new DarkModuleCard("PREVIOUS EMPLOYMENT INFORMATION", "PENDING", "📋", amberAcc,  prevEmpIcon, 390, 30, 220, 160);
 
-        btnMember.addActionListener(e -> navigateTo("Member Information Page"));
-        btnHeirs.addActionListener(e -> navigateTo("Heirs Information Page"));
-        btnCurrentEmp.addActionListener(e -> navigateTo("Current Employment Page"));
-        btnPrevEmp.addActionListener(e -> navigateTo("Previous Employment Page"));
+        btnMember.addActionListener(e -> {
+            new MemberInfoForm();
+            SignUpFrame.this.dispose();
+        });
+
+        btnHeirs.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Heirs Information");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new HeirsForm());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignUpFrame.this.dispose();
+        });
+
+        btnCurrentEmp.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Current Employment");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new CurrentEmpForm());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignUpFrame.this.dispose();
+        });
+
+        btnPrevEmp.addActionListener(e -> {
+            JFrame frame = new JFrame("Pag-CONNECT — Previous Employment");
+            frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            frame.setSize(1100, 750);
+            frame.add(new PrevEmpForm());
+            frame.setLocationRelativeTo(null);
+            frame.setVisible(true);
+            SignUpFrame.this.dispose();
+        });
 
         gridPanel.add(btnMember);
         gridPanel.add(btnHeirs);
@@ -237,8 +279,8 @@ public class SignUpFrame extends JFrame {
             new EmptyBorder(6, 14, 6, 14)
         ));
         btn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) { btn.setBackground(new Color(255,255,255,30)); btn.setOpaque(true); }
-            public void mouseExited(MouseEvent e)  { btn.setOpaque(false); }
+            public void mouseEntered(MouseEvent e) { btn.setForeground(new Color(200, 230, 255)); }
+            public void mouseExited(MouseEvent e)  { btn.setForeground(Color.WHITE); }
         });
     }
 
