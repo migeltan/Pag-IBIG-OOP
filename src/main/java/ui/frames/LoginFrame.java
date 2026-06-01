@@ -1,6 +1,6 @@
 package ui.frames;
 
-import dao.UserCredentialsDAO; // ADDED: import for UserCredentialsDAO to handle DB authentication
+import dao.UserCredentialsDAO;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
@@ -10,21 +10,18 @@ import java.awt.event.FocusListener;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import javax.swing.Timer;
 
 public class LoginFrame extends JFrame {
 
-    // Theme Colors
     private final Color primaryBlue = new Color(21, 101, 192);
     private final Color darkBlue    = new Color(13, 71, 161);
     private final Color textDark    = new Color(50, 50, 50);
     private final Color textMuted   = new Color(117, 117, 117);
     private final Color fieldBg     = new Color(245, 245, 245);
 
-    // Form Components
-    private ModernTextField    midField;
+    private ModernTextField     midField;
     private ModernPasswordField passField;
-    private JCheckBox          rememberBox;
+    private JCheckBox           rememberBox;
 
     public LoginFrame() {
         setTitle("Pag-CONNECT Member Portal");
@@ -71,7 +68,6 @@ public class LoginFrame extends JFrame {
         mainCard.setPreferredSize(new Dimension(800, 450));
         mainCard.setLayout(new GridLayout(1, 2));
 
-        // --- LEFT SIDE: SIGN IN FORM ---
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setOpaque(false);
@@ -119,35 +115,32 @@ public class LoginFrame extends JFrame {
         resetPassBtn.setFont(new Font("Arial", Font.PLAIN, 12));
         resetPassBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
 
-        optionsRow.add(rememberBox, BorderLayout.WEST);
-        optionsRow.add(resetPassBtn, BorderLayout.EAST);
+        optionsRow.add(rememberBox,   BorderLayout.WEST);
+        optionsRow.add(resetPassBtn,  BorderLayout.EAST);
 
-        // --- SIGN IN ACTION (DB auth) --- // CHANGED: comment updated from "SIGN IN ACTION" to "SIGN IN ACTION (DB auth)" to reflect the new authentication method
         JButton signInBtn = createStyledButton("Sign In", primaryBlue, Color.WHITE);
         signInBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         signInBtn.setMaximumSize(new Dimension(400, 45));
         signInBtn.addActionListener(e -> {
-            String mid  = midField.getText().trim();  // CHANGED: added .trim() to strip leading/trailing whitespace
-            String pass = String.valueOf(passField.getPassword()).trim(); // CHANGED: added .trim() to strip leading/trailing whitespace
+            String mid  = midField.getText().trim();
+            String pass = String.valueOf(passField.getPassword()).trim();
 
-            // Guard: placeholder / empty
-            if (mid.isEmpty() || mid.equals("1234-5678-9012") || pass.isEmpty()) { // CHANGED: removed || pass.equals("password") check since passwords are no longer hardcoded
+            if (mid.isEmpty() || mid.equals("1234-5678-9012") || pass.isEmpty()) {
                 JOptionPane.showMessageDialog(
                         this,
                         "Please enter your MID Number and Password.",
                         "Login Error",
                         JOptionPane.ERROR_MESSAGE);
-                return; // CHANGED: replaced the else block with an early return for cleaner control flow
+                return;
             }
 
-            // DB verification // ADDED: replaced hardcoded success message with actual database authentication
-            UserCredentialsDAO dao = new UserCredentialsDAO(); // ADDED: instantiate DAO to query the database
-            boolean valid = dao.verifyLogin(mid, pass); // ADDED: verify credentials against the database; pass plain text, hash inside DAO if needed
+            UserCredentialsDAO dao = new UserCredentialsDAO();
+            boolean valid = dao.verifyLogin(mid, pass);
 
-            if (valid) { // CHANGED: was always showing "Login Successful!" regardless of credentials
-                new SignInFrame();
+            if (valid) {
+                new SignInFrame(mid);   // ← pass the authenticated MID
                 dispose();
-            } else { // ADDED: handle failed login with an error message instead of always succeeding
+            } else {
                 JOptionPane.showMessageDialog(
                         this,
                         "Invalid MID Number or Password. Please try again.",
@@ -175,7 +168,6 @@ public class LoginFrame extends JFrame {
         leftPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         leftPanel.add(signInBtn);
 
-        // --- RIGHT SIDE: SIGN UP PROMO ---
         GradientPanel rightPanel = new GradientPanel(primaryBlue, darkBlue) {
             @Override
             protected void paintComponent(Graphics g) {
