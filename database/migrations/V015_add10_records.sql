@@ -1,5 +1,5 @@
 -- DROP FLYWAY
-DROP TABLE `pagibig`.`flyway_schema_history`;
+ DROP TABLE `pagibig`.`flyway_schema_history`;
 
 -- FIX SOME ERRORS
 UPDATE `pagibig`.`companydetailstable` SET `Company_Name` = 'Oracle Philippines' WHERE (`Company_Code` = 'ORC1');
