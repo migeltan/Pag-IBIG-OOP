@@ -155,6 +155,7 @@ public class CurrentEmpForm extends JPanel {
         card.add(south,  BorderLayout.SOUTH);
         bg.add(card);
         add(bg, BorderLayout.CENTER);
+        loadExistingRecord();
     }
     
  // ── Date Validation ─────────────────────────────────────────────────────
@@ -554,7 +555,61 @@ public class CurrentEmpForm extends JPanel {
         }
         companyBox.addItem("Other (Add New Company)");
     }
+ // ── Load Existing Record from DB ──────────────────────────────────
+    private void loadExistingRecord() {
+        String mid = RegistrationSession.getInstance().getTempMID();
+        CurrentEmpRecordTable record = new CurrentEmpDAO().getCurrentEmpByMID(mid);
+        if (record == null) return; // no saved record yet
 
+        // Occupation
+        occupationField.setText(record.getOccupation());
+
+        // Date employed — bypass document filter
+        setDateTextDirect(dateEmployedField, record.getDateEmployed().toString());
+
+        // Employment status
+        employmentStatusBox.setSelectedItem(record.getEmploymentStatus());
+
+        // Country of assignment (fires listener which enables/disables typeOfWork)
+        countryOfAssignmentBox.setSelectedItem(record.getCountryOfAssignment());
+
+        // Type of work (set after country so the box is enabled if OFW)
+        if (record.getTypeOfWork() != null) {
+            typeOfWorkBox.setSelectedItem(record.getTypeOfWork());
+        }
+
+        // Company dropdown — find matching label
+        String companyCode = record.getCompanyCode();
+        CompanyDetailsTable company = companyList.stream()
+            .filter(c -> c.getCompanyCode().equals(companyCode))
+            .findFirst().orElse(null);
+
+        if (company != null) {
+            String label;
+            if ("BRANCH".equals(company.getOfficeAssignment())
+                    && company.getBranchLocation() != null
+                    && !company.getBranchLocation().isEmpty()) {
+                label = company.getCompanyName() + " - Branch - " + company.getBranchLocation();
+            } else {
+                label = company.getCompanyName() + " - Head Office";
+            }
+            companyBox.setSelectedItem(label); // triggers ActionListener
+        }
+    }
+
+    // ── Set date text bypassing the document filter ───────────────────
+    private void setDateTextDirect(JTextField field, String value) {
+        javax.swing.text.AbstractDocument doc =
+            (javax.swing.text.AbstractDocument) field.getDocument();
+        javax.swing.text.DocumentFilter existing = doc.getDocumentFilter();
+        try {
+            doc.setDocumentFilter(null);
+            field.setText(value);
+        } finally {
+            doc.setDocumentFilter(existing);
+        }
+    }
+    
     // ── Handle Save ───────────────────────────────────────────────────────────
     private void handleSave() {
 
@@ -673,7 +728,8 @@ public class CurrentEmpForm extends JPanel {
 
         // ── Save to DB ────────────────────────────────────────────────────────
         CurrentEmpDAO dao = new CurrentEmpDAO();
-        boolean saved = dao.insertCurrentEmp(record);
+        boolean exists = dao.getCurrentEmpByMID(mid) != null;
+        boolean saved = exists ? dao.updateCurrentEmp(record) : dao.insertCurrentEmp(record);
 
         if (!saved) {
             showError("Failed to save employment record. Please try again."); return;

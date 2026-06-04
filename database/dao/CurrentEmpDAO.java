@@ -7,28 +7,6 @@ import java.sql.*;
 
 public class CurrentEmpDAO {
 	
-	// ─── UPDATE ───────────────────────────────────────────────────────────────
-	public boolean updateCurrentEmp(CurrentEmpRecordTable record) {
-	    String sql = "UPDATE currentemprecordtable SET "
-	            + "Company_Code = ?, Occupation = ?, Employment_Status = ?, "
-	            + "TypeOfWork = ?, Country_Of_Assignment = ?, Date_Employed = ? "
-	            + "WHERE PagIbig_MID_No = ?";
-	    try (Connection conn = DatabaseConnection.getConnection();
-	         PreparedStatement ps = conn.prepareStatement(sql)) {
-	        ps.setString(1, record.getCompanyCode());
-	        ps.setString(2, record.getOccupation());
-	        ps.setString(3, record.getEmploymentStatus());
-	        ps.setString(4, record.getTypeOfWork());
-	        ps.setString(5, record.getCountryOfAssignment());
-	        ps.setDate(6,   record.getDateEmployed());
-	        ps.setString(7, record.getPagIbigMIDNo());
-	        return ps.executeUpdate() > 0;
-	    } catch (SQLException e) {
-	        System.err.println("[CurrentEmpDAO] updateCurrentEmp error: " + e.getMessage());
-	        return false;
-	    }
-	}
-	
     // ─── INSERT ───────────────────────────────────────────────────────────────
     public boolean insertCurrentEmp(CurrentEmpRecordTable record) {
         String sql = "INSERT INTO currentemprecordtable "
@@ -51,6 +29,28 @@ public class CurrentEmpDAO {
 
         } catch (SQLException e) {
             System.err.println("[CurrentEmpDAO] insertCurrentEmp error: " + e.getMessage());
+            return false;
+        }
+    }
+    
+ // ─── UPDATE ───────────────────────────────────────────────────────────────
+    public boolean updateCurrentEmp(CurrentEmpRecordTable record) {
+        String sql = "UPDATE currentemprecordtable SET "
+                + "Company_Code = ?, Occupation = ?, Employment_Status = ?, "
+                + "TypeOfWork = ?, Country_Of_Assignment = ?, Date_Employed = ? "
+                + "WHERE PagIbig_MID_No = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, record.getCompanyCode());
+            ps.setString(2, record.getOccupation());
+            ps.setString(3, record.getEmploymentStatus());
+            ps.setString(4, record.getTypeOfWork());
+            ps.setString(5, record.getCountryOfAssignment());
+            ps.setDate(6,   record.getDateEmployed());
+            ps.setString(7, record.getPagIbigMIDNo());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[CurrentEmpDAO] updateCurrentEmp error: " + e.getMessage());
             return false;
         }
     }
