@@ -8,6 +8,8 @@ import javax.swing.*;
 import javax.swing.border.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.math.BigDecimal;
+import java.sql.Date;
 
 public class MemberInfoFormView extends JPanel {
 
@@ -89,7 +91,7 @@ public class MemberInfoFormView extends JPanel {
         JLabel title = new JLabel("Member Information");
         title.setForeground(textWhite);
         title.setFont(new Font("Arial Black", Font.BOLD, 24));
-        JLabel sub = new JLabel("View member details and information.");
+        JLabel sub = new JLabel("View and update member details and information.");
         sub.setForeground(new Color(255, 255, 255, 170));
         sub.setFont(new Font("Arial", Font.PLAIN, 13));
         header.add(title);
@@ -109,9 +111,13 @@ public class MemberInfoFormView extends JPanel {
             new SignInFrame(loggedInMID);
         });
 
+        JButton saveBtn = buildButton("Save", accentGreen);
+        saveBtn.addActionListener(e -> saveMemberData());
+
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         bottom.setOpaque(false);
         bottom.setBorder(new EmptyBorder(18, 0, 0, 0));
+        bottom.add(saveBtn);
         bottom.add(backBtn);
 
         card.add(header, BorderLayout.NORTH);
@@ -125,7 +131,9 @@ public class MemberInfoFormView extends JPanel {
         } else {
             loadDummyData();
         }
-        lockAllFields();
+
+        // Lock only Pag-IBIG MID No — all other fields remain editable
+        lockMidFieldOnly();
     }
 
     // ── Load Real Data from DB ────────────────────────────────────────────────
@@ -183,6 +191,87 @@ public class MemberInfoFormView extends JPanel {
             m.getTotalMoIncome()     != null ? m.getTotalMoIncome().toPlainString()     : "");
     }
 
+    // ── Save / Update Data to DB ──────────────────────────────────────────────
+    private void saveMemberData() {
+        if (loggedInMID == null || loggedInMID.isEmpty()) {
+            JOptionPane.showMessageDialog(this,
+                "Cannot save: no member ID is loaded.",
+                "Save Error", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        try {
+            MemberTable m = new MemberTable();
+
+            m.setPagIbigMIDNo(pagIbigMidNoField.getText().trim());
+            m.setMembershipType((String) membershipTypeBox.getSelectedItem());
+            m.setMembershipTypeOthers(membershipTypeOthersField.getText().trim());
+            m.setMembershipCategory((String) membershipCategoryBox.getSelectedItem());
+            m.setOccupationalStatus((String) occupationalStatusBox.getSelectedItem());
+            m.setFrequencyOfMembershipSavings((String) frequencyOfMembershipSavingsBox.getSelectedItem());
+            m.setCrn(crnField.getText().trim());
+
+            m.setMemberName(memberNameField.getText().trim());
+            m.setFatherName(fatherNameField.getText().trim());
+            m.setMotherName(motherNameField.getText().trim());
+            m.setSpouseName(spouseNameField.getText().trim());
+
+            String bdText = birthdateField.getText().trim();
+            m.setBirthdate(bdText.isEmpty() ? null : Date.valueOf(bdText));
+
+            m.setBirthplace(birthplaceField.getText().trim());
+            m.setMaritalStatus((String) maritalStatusBox.getSelectedItem());
+            m.setSex((String) sexBox.getSelectedItem());
+            m.setCitizenship((String) citizenshipBox.getSelectedItem());
+
+            String empNo = employeeNumberField.getText().trim();
+            m.setEmployeeNumber(empNo.isEmpty() ? null : Integer.parseInt(empNo));
+
+            m.setTin(tinField.getText().trim());
+            m.setSss(sssField.getText().trim());
+
+            m.setPresentHomeAddress(presentHomeAddressField.getText().trim());
+            m.setPermanentHomeAddress(permanentHomeAddressField.getText().trim());
+            m.setPreferredMailingAddress((String) preferredMailingAddressBox.getSelectedItem());
+
+            m.setCellphoneNum(cellphoneNumField.getText().trim());
+            m.setHomeTelNum(homeTelNumField.getText().trim());
+            m.setEmailAddress(emailAddressField.getText().trim());
+            m.setBusDirectLine(busDirectLineField.getText().trim());
+            m.setBusTrunkLine(busTrunkLineField.getText().trim());
+            m.setLocal(localField.getText().trim());
+
+            String basic = allowBasicField.getText().trim();
+            String other = allowOtherSourcesField.getText().trim();
+            String total = totalMoIncomeField.getText().trim();
+            m.setAllowBasic(       basic.isEmpty() ? null : new BigDecimal(basic));
+            m.setAllowOtherSources(other.isEmpty() ? null : new BigDecimal(other));
+            m.setTotalMoIncome(    total.isEmpty() ? null : new BigDecimal(total));
+
+            MemberDAO dao = new MemberDAO();
+            boolean success = dao.updateMember(m);
+
+            if (success) {
+                JOptionPane.showMessageDialog(this,
+                    "Member information updated successfully.",
+                    "Saved", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this,
+                    "Update failed. No rows were affected.",
+                    "Save Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this,
+                "Invalid date format. Please use YYYY-MM-DD for Birthdate.",
+                "Validation Error", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this,
+                "An error occurred while saving:\n" + ex.getMessage(),
+                "Save Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // ── Helpers ───────────────────────────────────────────────────────────────
     private void setCombo(JComboBox<String> box, String value) {
         if (value == null || value.isEmpty()) return;
@@ -197,6 +286,12 @@ public class MemberInfoFormView extends JPanel {
     }
 
     private String safe(String s) { return s != null ? s : ""; }
+
+    // ── Lock ONLY the Pag-IBIG MID No field ──────────────────────────────────
+    private void lockMidFieldOnly() {
+        pagIbigMidNoField.setEditable(false);
+        pagIbigMidNoField.setFocusable(false);
+    }
 
     // ── Build Form Content ────────────────────────────────────────────────────
     private JPanel buildContent() {
@@ -356,30 +451,6 @@ public class MemberInfoFormView extends JPanel {
         totalMoIncomeField.setText("20000.00");
     }
 
-    // ── Lock All Fields ───────────────────────────────────────────────────────
-    private void lockAllFields() {
-        JTextField[] textFields = {
-                pagIbigMidNoField, membershipTypeOthersField,
-                memberNameField, fatherNameField, motherNameField, spouseNameField,
-                birthdateField, birthplaceField, crnField,
-                tinField, sssField, employeeNumberField,
-                presentHomeAddressField, permanentHomeAddressField,
-                homeTelNumField, cellphoneNumField,
-                busDirectLineField, busTrunkLineField, localField, emailAddressField,
-                allowBasicField, allowOtherSourcesField, totalMoIncomeField
-        };
-        for (JTextField f : textFields) {
-            f.setEditable(false);
-            f.setFocusable(false);
-        }
-        JComboBox<?>[] combos = {
-                occupationalStatusBox, membershipTypeBox, membershipCategoryBox,
-                maritalStatusBox, sexBox, frequencyOfMembershipSavingsBox,
-                preferredMailingAddressBox, citizenshipBox
-        };
-        for (JComboBox<?> b : combos) b.setEnabled(false);
-    }
-
     // ── Section Header ────────────────────────────────────────────────────────
     private JPanel sectionHeader(String text) {
         JPanel p = new JPanel(new BorderLayout());
@@ -469,7 +540,7 @@ public class MemberInfoFormView extends JPanel {
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
-            JFrame f = new JFrame("Member Info — View");
+            JFrame f = new JFrame("Member Info — View/Edit");
             f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             f.setSize(1100, 750);
             f.add(new MemberInfoFormView());

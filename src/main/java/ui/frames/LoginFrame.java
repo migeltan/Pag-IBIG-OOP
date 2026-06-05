@@ -318,8 +318,7 @@ public class LoginFrame extends JFrame {
     class ModernTextField extends JTextField {
         public ModernTextField(String placeholder, Color bgColor) {
             setOpaque(false);
-            setBorder(new EmptyBorder(10, 15, 10, 15));
-            setFont(new Font("Arial", Font.PLAIN, 14));
+            setBorder(new EmptyBorder(10, 15, 10, 15));            setFont(new Font("Arial", Font.PLAIN, 14));
             setForeground(Color.GRAY);
             setText(placeholder);
             addFocusListener(new FocusListener() {
