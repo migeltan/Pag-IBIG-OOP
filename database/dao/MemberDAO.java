@@ -13,6 +13,19 @@ import models.MemberTable;
 
 public class MemberDAO {
 
+    // Helper method to dynamically calculate if a profile is complete
+    private String determineCalculatedStatus(MemberTable member) {
+        if (member.getMemberName() == null || member.getMemberName().trim().isEmpty() ||
+            member.getCellphoneNum() == null || member.getCellphoneNum().trim().isEmpty() ||
+            member.getEmailAddress() == null || member.getEmailAddress().trim().isEmpty() ||
+            member.getPresentHomeAddress() == null || member.getPresentHomeAddress().trim().isEmpty() ||
+            member.getBirthdate() == null) {
+            
+            return "INCOMPLETE";
+        }
+        return "COMPLETE";
+    }
+
     // ─── CREATE ──────────────────────────────────────────────────────────────
     public boolean insertMember(MemberTable member) {
         String sql = "INSERT INTO membertable ("
@@ -22,11 +35,15 @@ public class MemberDAO {
                 + "Sex, CRN, Frequency_Of_Membership_Savings, TIN, SSS, Employee_Number, "
                 + "Present_Home_Address, Permanent_Home_Address, Preferred_Mailing_Address, "
                 + "Home_TelNum, Cellphone_Num, Bus_DirectLine, Bus_TrunkLine, Local, "
-                + "Email_Address, Allow_Basic, Allow_Other_Sources, Total_Mo_Income"
-                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
+                + "Email_Address, Allow_Basic, Allow_Other_Sources, Total_Mo_Income, Application_Status"
+                + ") VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Automatically determine correct status before inserting
+            String computedStatus = determineCalculatedStatus(member);
+            member.setApplicationStatus(computedStatus);
 
             ps.setString(1,  member.getPagIbigMIDNo());
             ps.setString(2,  member.getOccupationalStatus());
@@ -58,6 +75,7 @@ public class MemberDAO {
             ps.setBigDecimal(28, member.getAllowBasic());
             ps.setBigDecimal(29, member.getAllowOtherSources());
             ps.setBigDecimal(30, member.getTotalMoIncome());
+            ps.setString(31, member.getApplicationStatus()); // Corrected parameter indexing assignment
 
             return ps.executeUpdate() > 0;
 
@@ -97,6 +115,7 @@ public class MemberDAO {
 
     // ─── UPDATE ──────────────────────────────────────────────────────────────
     public boolean updateMember(MemberTable member) {
+        // Fixed: Added Application_Status column modifier to the set parameters
         String sql = "UPDATE membertable SET "
                 + "Occupational_Status = ?, Membership_Type = ?, "
                 + "Membership_Category = ?, Member_Name = ?, "
@@ -106,11 +125,16 @@ public class MemberDAO {
                 + "Present_Home_Address = ?, Permanent_Home_Address = ?, "
                 + "Preferred_Mailing_Address = ?, Home_TelNum = ?, Cellphone_Num = ?, "
                 + "Bus_DirectLine = ?, Bus_TrunkLine = ?, Local = ?, Email_Address = ?, "
-                + "Allow_Basic = ?, Allow_Other_Sources = ?, Total_Mo_Income = ? "
+                + "Allow_Basic = ?, Allow_Other_Sources = ?, Total_Mo_Income = ?, "
+                + "Application_Status = ? " 
                 + "WHERE PagIbig_MID_No = ?";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            // Compute fresh status check on save
+            String computedStatus = determineCalculatedStatus(member);
+            member.setApplicationStatus(computedStatus);
 
             ps.setString(1,  member.getOccupationalStatus());
             ps.setString(2,  member.getMembershipType());
@@ -141,7 +165,8 @@ public class MemberDAO {
             ps.setBigDecimal(27, member.getAllowBasic());
             ps.setBigDecimal(28, member.getAllowOtherSources());
             ps.setBigDecimal(29, member.getTotalMoIncome());
-            ps.setString(30, member.getPagIbigMIDNo());
+            ps.setString(30, member.getApplicationStatus()); // Bind status value
+            ps.setString(31, member.getPagIbigMIDNo());       // Shifted WHERE key parameter down to 31
 
             return ps.executeUpdate() > 0;
 
@@ -197,6 +222,15 @@ public class MemberDAO {
         m.setAllowBasic(rs.getBigDecimal("Allow_Basic"));
         m.setAllowOtherSources(rs.getBigDecimal("Allow_Other_Sources"));
         m.setTotalMoIncome(rs.getBigDecimal("Total_Mo_Income"));
+        
+        // Read column, but run dynamic validation to ensure old/blank values update correctly 
+        String rawStatus = rs.getString("Application_Status");
+        if (rawStatus == null || rawStatus.equals("INCOMPLETE")) {
+            m.setApplicationStatus(determineCalculatedStatus(m));
+        } else {
+            m.setApplicationStatus(rawStatus);
+        }
+        
         return m;
     }
 

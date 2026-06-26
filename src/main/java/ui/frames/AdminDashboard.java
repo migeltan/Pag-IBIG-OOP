@@ -237,12 +237,31 @@ public class AdminDashboard extends JFrame {
         JButton refreshBtn = (JButton) searchRow.getComponent(2);
 
         String[] cols = {"MID No.", "Name", "Membership Type", "Category",
-                         "Occ. Status", "Sex", "Birthdate", "Cellphone", "Email"};
+                "Occ. Status", "Sex", "Birthdate", "Cellphone", "Email", "Status"};
         memberModel = new DefaultTableModel(cols, 0) {
             public boolean isCellEditable(int r, int c) { return false; }
         };
         memberTable = styledTable(memberModel);
-
+        
+        memberTable.getColumnModel().getColumn(9).setCellRenderer(
+        	    new DefaultTableCellRenderer() {
+        	        @Override
+        	        public Component getTableCellRendererComponent(JTable t, Object val,
+        	                boolean sel, boolean foc, int row, int col) {
+        	            super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+        	            String status = val != null ? val.toString() : "";
+        	            setForeground("COMPLETE".equals(status)
+        	                    ? new Color(0, 212, 170)    // green
+        	                    : new Color(220, 60, 85));  // red
+        	            setBackground(sel ? new Color(0, 212, 170, 45)
+        	                    : (row % 2 == 0 ? new Color(11, 20, 46) : new Color(15, 27, 58)));
+        	            setFont(getFont().deriveFont(Font.BOLD));
+        	            setBorder(new EmptyBorder(0, 14, 0, 14));
+        	            return this;
+        	        }
+        	    }
+        	);
+        
         JPanel actions = actionRow(
             actionBtn("Edit",   accentAmber, e -> editMember()),
             actionBtn("Delete", accentRed,   e -> deleteMember())
@@ -280,7 +299,8 @@ public class AdminDashboard extends JFrame {
             memberModel.addRow(new Object[]{
                 m.getPagIbigMIDNo(), m.getMemberName(), m.getMembershipType(),
                 m.getMembershipCategory(), m.getOccupationalStatus(), m.getSex(),
-                m.getBirthdate(), m.getCellphoneNum(), m.getEmailAddress()
+                m.getBirthdate(), m.getCellphoneNum(), m.getEmailAddress(), 
+                m.getApplicationStatus()
             });
         }
     }

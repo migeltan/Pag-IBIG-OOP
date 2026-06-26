@@ -474,6 +474,7 @@ public class MemberInfoForm extends JFrame {
                 localField.getText().trim(), emailAddressField.getText().trim(),
                 allowBasic, allowOther, totalIncome
         );
+        member.setApplicationStatus("COMPLETE"); // ADD THIS
 
         MemberDAO dao = new MemberDAO();
         boolean saved = recordExists ? dao.updateMember(member) : dao.insertMember(member);

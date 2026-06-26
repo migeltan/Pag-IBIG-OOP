@@ -35,6 +35,7 @@ public class MemberTable {
     private BigDecimal allowBasic;
     private BigDecimal allowOtherSources;
     private BigDecimal totalMoIncome;
+    private String applicationStatus;
 
     public MemberTable() {}
 
@@ -142,6 +143,8 @@ public class MemberTable {
     public void setAllowOtherSources(BigDecimal v)        { this.allowOtherSources = v; }
     public BigDecimal getTotalMoIncome()                  { return totalMoIncome; }
     public void setTotalMoIncome(BigDecimal v)            { this.totalMoIncome = v; }
+    public String getApplicationStatus()       { return applicationStatus; }
+    public void setApplicationStatus(String v) { this.applicationStatus = v; }
 
     @Override
     public String toString() {
