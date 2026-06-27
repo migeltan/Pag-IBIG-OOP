@@ -241,16 +241,9 @@ public class LoginFrame extends JFrame {
         rememberBox.setForeground(textMuted);
         rememberBox.setFocusPainted(false);
 
-        JButton resetPassBtn = new JButton("Reset Password");
-        resetPassBtn.setContentAreaFilled(false);
-        resetPassBtn.setBorderPainted(false);
-        resetPassBtn.setFocusPainted(false);
-        resetPassBtn.setForeground(primaryBlue);
-        resetPassBtn.setFont(new Font("Arial", Font.PLAIN, 12));
-        resetPassBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
+        
         optionsRow.add(rememberBox,   BorderLayout.WEST);
-        optionsRow.add(resetPassBtn,  BorderLayout.EAST);
+     
 
         JButton signInBtn = createStyledButton("Sign In", primaryBlue, Color.WHITE);
         signInBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -283,11 +276,7 @@ public class LoginFrame extends JFrame {
             }
         });
 
-        resetPassBtn.addActionListener(e -> {
-            new PasswordRecoveryFrame().setVisible(true);
-            dispose();
-        });
-
+   
         leftPanel.add(signInLabel);
         leftPanel.add(Box.createRigidArea(new Dimension(0, 30)));
         leftPanel.add(midLabel);

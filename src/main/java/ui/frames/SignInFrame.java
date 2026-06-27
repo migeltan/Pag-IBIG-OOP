@@ -5,9 +5,7 @@ import models.MemberTable;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-
 import ui.forms.MemberRecordForm;
-import ui.forms.SecurityQuestionsSetupFrame;
 import ui.views.CurrentEmpFormView;
 import ui.views.HeirsFormView;
 import ui.views.MemberInfoFormView;
@@ -157,41 +155,12 @@ public class SignInFrame extends JFrame {
             SignInFrame.this.setVisible(false);
         });
 
-        JButton settingsBtn = new JButton("⚙  Settings");
-        settingsBtn.setFont(new Font("Arial", Font.BOLD, 12));
-        settingsBtn.setForeground(new Color(251, 191, 36));
-        settingsBtn.setOpaque(false);
-        settingsBtn.setContentAreaFilled(false);
-        settingsBtn.setFocusPainted(false);
-        settingsBtn.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        settingsBtn.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(251, 191, 36, 120), 1, true),
-            new EmptyBorder(8, 20, 8, 20)
-        ));
-        settingsBtn.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                settingsBtn.setForeground(new Color(10, 22, 40));
-                settingsBtn.setBackground(new Color(251, 191, 36));
-                settingsBtn.setContentAreaFilled(true);
-                settingsBtn.setOpaque(true);
-            }
-            public void mouseExited(MouseEvent e) {
-                settingsBtn.setForeground(new Color(251, 191, 36));
-                settingsBtn.setContentAreaFilled(false);
-                settingsBtn.setOpaque(false);
-            }
-        });
-        settingsBtn.addActionListener(e -> {
-            new SecurityQuestionsSetupFrame(loggedInMID).setVisible(true);
-            SignInFrame.this.dispose();
-        });
 
         JPanel btnRow = new JPanel();
         btnRow.setLayout(new BoxLayout(btnRow, BoxLayout.X_AXIS));
         btnRow.setOpaque(false);
         btnRow.add(editBtn);
-        btnRow.add(Box.createRigidArea(new Dimension(10, 0)));
-        btnRow.add(settingsBtn);
+   
 
         JPanel rightHeader = new JPanel(new GridBagLayout());
         rightHeader.setOpaque(false);

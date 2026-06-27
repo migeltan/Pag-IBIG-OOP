@@ -14,7 +14,7 @@ public class DatabaseConnection {
     private static final String USERNAME = "root";
     // private static final String PASSWORD = "adminuser";
     //private static final String PASSWORD = "adminuser";
-    private static final String PASSWORD = "yeshua26.";
+    private static final String PASSWORD = "adminuser";
 
     /**
      * Returns a new Connection to the pagibig database.
