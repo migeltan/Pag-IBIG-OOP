@@ -193,6 +193,7 @@ public class AdminDashboard extends JFrame {
         tabs.addTab("  Previous Employment", buildPreviousEmploymentTab());
         tabs.addTab("  Heirs",               buildHeirsTab());
         tabs.addTab("  Companies",           buildCompaniesTab());
+        tabs.addTab("  📊 Reports",           buildReportsTab());
 
         tabs.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI() {
             @Override protected void installDefaults() {
@@ -1042,6 +1043,306 @@ public class AdminDashboard extends JFrame {
                 loadCompanies(companySearch.getText().trim());
             } else showError("Delete failed.");
         }
+    }
+
+    // ── REPORTS TAB ──────────────────────────────────────────────────────────
+    private DefaultTableModel reportModel;
+    private JTable            reportTable;
+    private JTextField        reportSearch;
+    private JLabel            totalMembersLabel;
+    private JLabel            fullCompleteLabel;
+    private JLabel            partialLabel;
+    private JLabel            avgCompleteLabel;
+
+    private JPanel buildReportsTab() {
+        JPanel panel = tabPanel();
+
+        // ── Summary cards row ─────────────────────────────────────────────────
+        JPanel summaryRow = new JPanel(new java.awt.GridLayout(1, 4, 16, 0));
+        summaryRow.setOpaque(false);
+        summaryRow.setBorder(new EmptyBorder(0, 0, 18, 0));
+
+        totalMembersLabel = new JLabel("—");
+        fullCompleteLabel  = new JLabel("—");
+        partialLabel       = new JLabel("—");
+        avgCompleteLabel   = new JLabel("—");
+
+        summaryRow.add(summaryCard("Total Members",      totalMembersLabel, accentBlue));
+        summaryRow.add(summaryCard("Fully Complete",     fullCompleteLabel,  accentGreen));
+        summaryRow.add(summaryCard("Partial",            partialLabel,       accentAmber));
+        summaryRow.add(summaryCard("Avg. Completion",    avgCompleteLabel,   new Color(160, 100, 220)));
+
+        // ── Search row ────────────────────────────────────────────────────────
+        JPanel searchRow = searchRow();
+        reportSearch = (JTextField) searchRow.getComponent(0);
+        JButton searchBtn  = (JButton) searchRow.getComponent(1);
+        JButton refreshBtn = (JButton) searchRow.getComponent(2);
+
+        // ── Table ─────────────────────────────────────────────────────────────
+        String[] cols = {
+            "MID No.", "Member Name", "Member Info", "Current Emp",
+            "Prev Emp", "Heirs", "Completion %", "Status"
+        };
+        reportModel = new DefaultTableModel(cols, 0) {
+            public boolean isCellEditable(int r, int c) { return false; }
+        };
+        reportTable = styledTable(reportModel);
+
+        // ── Completion % column renderer (progress bar style) ─────────────────
+        reportTable.getColumnModel().getColumn(6).setCellRenderer(
+            new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable t, Object val,
+                        boolean sel, boolean foc, int row, int col) {
+                    int pct = val instanceof Integer ? (int) val : 0;
+                    JPanel bar = new JPanel(new BorderLayout()) {
+                        @Override protected void paintComponent(Graphics g) {
+                            super.paintComponent(g);
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                                    RenderingHints.VALUE_ANTIALIAS_ON);
+                            // Track
+                            g2.setColor(new Color(255, 255, 255, 15));
+                            g2.fillRoundRect(8, getHeight()/2 - 5, getWidth()-16, 10, 6, 6);
+                            // Fill
+                            int fillW = (int) ((getWidth() - 16) * pct / 100.0);
+                            Color fill = pct == 100 ? accentGreen
+                                       : pct >= 50  ? accentAmber
+                                       : accentRed;
+                            g2.setColor(fill);
+                            g2.fillRoundRect(8, getHeight()/2 - 5, fillW, 10, 6, 6);
+                            // Label
+                            g2.setColor(Color.WHITE);
+                            g2.setFont(new Font("Arial", Font.BOLD, 11));
+                            String label = pct + "%";
+                            java.awt.FontMetrics fm = g2.getFontMetrics();
+                            g2.drawString(label, getWidth()/2 - fm.stringWidth(label)/2,
+                                    getHeight()/2 + fm.getAscent()/2 - 1);
+                            g2.dispose();
+                        }
+                    };
+                    bar.setBackground(sel
+                            ? new Color(0, 212, 170, 45)
+                            : (row % 2 == 0 ? new Color(11, 20, 46) : new Color(15, 27, 58)));
+                    return bar;
+                }
+            }
+        );
+
+        // ── Status column renderer ─────────────────────────────────────────────
+        reportTable.getColumnModel().getColumn(7).setCellRenderer(
+            new DefaultTableCellRenderer() {
+                @Override
+                public Component getTableCellRendererComponent(JTable t, Object val,
+                        boolean sel, boolean foc, int row, int col) {
+                    super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+                    String s = val != null ? val.toString() : "";
+                    setForeground(
+                        "COMPLETE".equals(s)   ? accentGreen :
+                        "IN PROGRESS".equals(s) ? accentAmber : accentRed
+                    );
+                    setBackground(sel ? new Color(0, 212, 170, 45)
+                            : (row % 2 == 0 ? new Color(11, 20, 46) : new Color(15, 27, 58)));
+                    setFont(getFont().deriveFont(Font.BOLD));
+                    setBorder(new EmptyBorder(0, 14, 0, 14));
+                    return this;
+                }
+            }
+        );
+
+        // ── Module check columns (✔ / ✘) ─────────────────────────────────────
+        for (int col : new int[]{2, 3, 4, 5}) {
+            final int c = col;
+            reportTable.getColumnModel().getColumn(c).setCellRenderer(
+                new DefaultTableCellRenderer() {
+                    @Override
+                    public Component getTableCellRendererComponent(JTable t, Object val,
+                            boolean sel, boolean foc, int row, int col2) {
+                        super.getTableCellRendererComponent(t, val, sel, foc, row, col2);
+                        boolean done = Boolean.TRUE.equals(val);
+                        setText(done ? "✔" : "✘");
+                        setForeground(done ? accentGreen : new Color(180, 60, 80));
+                        setHorizontalAlignment(CENTER);
+                        setBackground(sel ? new Color(0, 212, 170, 45)
+                                : (row % 2 == 0 ? new Color(11, 20, 46) : new Color(15, 27, 58)));
+                        setFont(new Font("Segoe UI Symbol", Font.BOLD, 15));
+                        setBorder(new EmptyBorder(0, 0, 0, 0));
+                        return this;
+                    }
+                }
+            );
+        }
+
+        // Column widths
+        int[] widths = {130, 180, 90, 95, 90, 65, 120, 100};
+        for (int i = 0; i < widths.length; i++)
+            reportTable.getColumnModel().getColumn(i).setPreferredWidth(widths[i]);
+
+        searchBtn.addActionListener(e -> loadReport(reportSearch.getText().trim()));
+        refreshBtn.addActionListener(e -> { reportSearch.setText(""); loadReport(""); });
+
+        // ── Export button ─────────────────────────────────────────────────────
+        JButton exportBtn = actionBtn("Export CSV", new Color(30, 90, 180), e -> exportReportCSV());
+
+        JPanel actions = actionRow(exportBtn);
+
+        // ── Assemble ──────────────────────────────────────────────────────────
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.add(sectionLabel("Application Status Report"), BorderLayout.WEST);
+
+        JPanel north = new JPanel();
+        north.setLayout(new BoxLayout(north, BoxLayout.Y_AXIS));
+        north.setOpaque(false);
+        north.add(header);
+        north.add(Box.createRigidArea(new Dimension(0, 12)));
+        north.add(summaryRow);
+        north.add(Box.createRigidArea(new Dimension(0, 4)));
+        north.add(searchRow);
+
+        JPanel center = new JPanel(new BorderLayout(0, 10));
+        center.setOpaque(false);
+        center.add(north,                    BorderLayout.NORTH);
+        center.add(tableScroll(reportTable), BorderLayout.CENTER);
+        center.add(actions,                  BorderLayout.SOUTH);
+
+        panel.add(center, BorderLayout.CENTER);
+
+        loadReport("");
+        return panel;
+    }
+
+    /**
+     * Completion scoring:
+     *   Member Info   = 25%  (always present if record exists)
+     *   Current Emp   = 25%
+     *   Prev Emp      = 25%
+     *   Heirs         = 25%
+     */
+    private void loadReport(String filter) {
+        reportModel.setRowCount(0);
+
+        MemberDAO         mDao   = new MemberDAO();
+        dao.CurrentEmpDAO cDao   = new dao.CurrentEmpDAO();
+        dao.PrevEmpDAO    pDao   = new dao.PrevEmpDAO();
+        dao.HeirsDAO      hDao   = new dao.HeirsDAO();
+
+        java.util.List<MemberTable>  members  = mDao.getAllMembers();
+        java.util.List<PrevEmpTable> allPrev  = pDao.getAllPrevEmp();
+        java.util.Set<String>        prevMIDs = new java.util.HashSet<>();
+        for (PrevEmpTable pe : allPrev) prevMIDs.add(pe.getPagIbigMIDNo());
+
+        int totalCount    = 0;
+        int fullCount     = 0;
+        int partialCount  = 0;
+        int totalPct      = 0;
+
+        for (MemberTable m : members) {
+            String mid  = m.getPagIbigMIDNo();
+            String name = safe(m.getMemberName());
+
+            if (!filter.isEmpty()
+                    && !mid.contains(filter)
+                    && !name.toLowerCase().contains(filter.toLowerCase())) continue;
+
+            boolean hasMember  = true;
+            boolean hasCurrEmp = cDao.getByMID(mid) != null;
+            boolean hasPrevEmp = prevMIDs.contains(mid);
+            boolean hasHeirs   = !hDao.getHeirsByMID(mid).isEmpty();
+
+            int pct = 0;
+            if (hasMember)  pct += 25;
+            if (hasCurrEmp) pct += 25;
+            if (hasPrevEmp) pct += 25;
+            if (hasHeirs)   pct += 25;
+
+            String status = pct == 100 ? "COMPLETE"
+                          : pct > 0    ? "IN PROGRESS"
+                          : "NOT STARTED";
+
+            reportModel.addRow(new Object[]{
+                mid, name,
+                hasMember, hasCurrEmp, hasPrevEmp, hasHeirs,
+                pct, status
+            });
+
+            totalCount++;
+            totalPct += pct;
+            if (pct == 100)  fullCount++;
+            else if (pct > 0) partialCount++;
+        }
+
+        // Update summary cards
+        totalMembersLabel.setText(String.valueOf(totalCount));
+        fullCompleteLabel.setText(String.valueOf(fullCount));
+        partialLabel.setText(String.valueOf(partialCount));
+        avgCompleteLabel.setText(totalCount > 0
+                ? String.format("%.0f%%", (double) totalPct / totalCount)
+                : "—");
+    }
+
+    /** Exports the current report table rows as a CSV file. */
+    private void exportReportCSV() {
+        javax.swing.JFileChooser fc = new javax.swing.JFileChooser();
+        fc.setSelectedFile(new java.io.File("pag_ibig_report.csv"));
+        if (fc.showSaveDialog(this) != javax.swing.JFileChooser.APPROVE_OPTION) return;
+        try (java.io.PrintWriter pw = new java.io.PrintWriter(fc.getSelectedFile())) {
+            pw.println("MID No.,Member Name,Member Info,Current Emp,Prev Emp,Heirs,Completion %,Status");
+            for (int r = 0; r < reportModel.getRowCount(); r++) {
+                pw.printf("%s,%s,%s,%s,%s,%s,%s,%s%n",
+                    reportModel.getValueAt(r, 0),
+                    "\"" + reportModel.getValueAt(r, 1) + "\"",
+                    (Boolean) reportModel.getValueAt(r, 2) ? "YES" : "NO",
+                    (Boolean) reportModel.getValueAt(r, 3) ? "YES" : "NO",
+                    (Boolean) reportModel.getValueAt(r, 4) ? "YES" : "NO",
+                    (Boolean) reportModel.getValueAt(r, 5) ? "YES" : "NO",
+                    reportModel.getValueAt(r, 6) + "%",
+                    reportModel.getValueAt(r, 7)
+                );
+            }
+            showInfo("Report exported successfully!");
+        } catch (Exception ex) {
+            showError("Export failed: " + ex.getMessage());
+        }
+    }
+
+    /** Summary stat card helper. */
+    private JPanel summaryCard(String title, JLabel valueLabel, Color accent) {
+        JPanel card = new JPanel() {
+            @Override protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 12));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                g2.setColor(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 60));
+                g2.setStroke(new java.awt.BasicStroke(1.2f));
+                g2.drawRoundRect(0, 0, getWidth()-1, getHeight()-1, 14, 14);
+                // Accent top bar
+                g2.setColor(accent);
+                g2.setStroke(new java.awt.BasicStroke(2.5f));
+                g2.drawLine(14, 1, getWidth()-14, 1);
+                g2.dispose();
+            }
+        };
+        card.setOpaque(false);
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setBorder(new EmptyBorder(14, 18, 14, 18));
+        card.setPreferredSize(new Dimension(0, 80));
+
+        JLabel titleLbl = new JLabel(title.toUpperCase());
+        titleLbl.setFont(new Font("Arial", Font.BOLD, 10));
+        titleLbl.setForeground(new Color(accent.getRed(), accent.getGreen(), accent.getBlue(), 180));
+        titleLbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        valueLabel.setFont(new Font("Arial Black", Font.BOLD, 28));
+        valueLabel.setForeground(Color.WHITE);
+        valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        card.add(titleLbl);
+        card.add(Box.createRigidArea(new Dimension(0, 4)));
+        card.add(valueLabel);
+        return card;
     }
 
     // ── UI HELPERS ───────────────────────────────────────────────────────────
