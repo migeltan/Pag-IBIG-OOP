@@ -1,6 +1,6 @@
 # Pag-CONNECT
 
-**Pag-CONNECT** is a desktop-based Pag-IBIG membership management system built using Java (Swing) and MySQL. This project demonstrates the application of core OOP principles, database connectivity using JDBC, exception handling, and CRUD operations through a GUI-driven interface.
+**Pag-CONNECT** is a desktop-based Pag-IBIG membership management system built using Java (Swing) and MySQL. This project demonstrates the application of core OOP principles, database connectivity, exception handling, and CRUD operations through a GUI-driven interface.
 
 ---
 
@@ -34,7 +34,7 @@ The project demonstrates the use of:
 - Abstraction
 - Constructors and Methods
 - Exception Handling
-- Database Connectivity (JDBC)
+- Database Connectivity 
 
 
 ---
